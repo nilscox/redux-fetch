@@ -1,0 +1,16 @@
+{
+  "name": "redux-fetch",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "devDependencies": {
+    "isomorphic-fetch": "^2.2.1",
+    "node-fetch": "^2.1.2",
+    "redux": "^3.7.2",
+    "redux-logger": "^3.0.6",
+    "redux-promise": "^0.5.3"
+  }
+}
