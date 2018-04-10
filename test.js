@@ -100,10 +100,10 @@ const test_prefix = async () => {
   await test(action, expected);
 };
 
-const test_route = async () => {
-  const action = new FetchAction('HELLO', '/walala');
+const test_url = async () => {
+  const action = new FetchAction('HELLO').get('/walala');
   const expected = [
-    action => assert.strictEqual(action.route, '/walala'),
+    action => assert.strictEqual(action.url, 'http://localhost:7357/walala'),
     null, null,
   ];
 
@@ -111,7 +111,7 @@ const test_route = async () => {
 };
 
 const test_opts = async () => {
-  const action = new FetchAction('HELLO', null, { custom: 42 });
+  const action = new FetchAction('HELLO').opts({ custom: 42 });
   const expected = [
     action => {
       assert.ok(action.custom);
@@ -140,28 +140,28 @@ const test_expect = async () => {
     action: new FetchAction('HELLO'),
     expected: expectSuccess,
   }, {
-    action: new FetchAction('HELLO', '/401'),
+    action: new FetchAction('HELLO').get('/401'),
     expected: expectFailure,
   }, {
     action: new FetchAction('HELLO').expect(200),
     expected: expectSuccess,
   }, {
-    action: new FetchAction('HELLO', '/400').expect(400),
+    action: new FetchAction('HELLO').get('/400').expect(400),
     expected: expectSuccess,
   }, {
     action: new FetchAction('HELLO').expect([200, 201]),
     expected: expectSuccess,
   }, {
-    action: new FetchAction('HELLO', '/404').expect(200),
+    action: new FetchAction('HELLO').get('/404').expect(200),
     expected: expectFailure,
   }, {
     action: new FetchAction('HELLO').expect(404),
     expected: expectFailure,
   }, {
-    action: new FetchAction('HELLO', '/300').expect([200, 300, 400]),
+    action: new FetchAction('HELLO').get('/300').expect([200, 300, 400]),
     expected: expectSuccess,
   }, {
-    action: new FetchAction('HELLO', '/500').expect([200, 300, 400]),
+    action: new FetchAction('HELLO').get('/500').expect([200, 300, 400]),
     expected: expectFailure,
   }];
 
@@ -170,14 +170,14 @@ const test_expect = async () => {
 
 const test_contentType = async () => {
   const test_contentType_json = async () => {
-    const action = new FetchAction('HELLO', '/200/json');
+    const action = new FetchAction('HELLO').get('/200/json');
     const result = await test(action, [null, null, null]);
 
     assert.strictEqual(typeof result.body, 'object');
   };
 
   const test_contentType_text = async () => {
-    const action = new FetchAction('HELLO', '/200/text');
+    const action = new FetchAction('HELLO').get('/200/text');
     const result = await test(action, [null, null, null]);
 
     assert.strictEqual(typeof result.body, 'string');
@@ -202,7 +202,7 @@ withServer(async () => {
     await Promise.all([
       test_noprefix(),
       test_prefix(),
-      test_route(),
+      test_url(),
       test_opts(),
       test_expect(),
       test_contentType(),
