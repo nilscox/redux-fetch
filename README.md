@@ -31,7 +31,7 @@ yarn add nilscox/redux-fetch
 
 ```js
 import { createStore, applyMiddleware } from 'redux';
-import { createFetchMiddleware, FetchAction } from 'reduxFetch';
+import { createFetchMiddleware, FetchAction } from 'redux-fetch';
 import reducer from 'somewhere';
 
 const fetchMiddleware = createFetchMiddleware({
@@ -84,18 +84,22 @@ Assuming the call to `http://some.api/user/login` with the provided credentials 
 }
 ```
 
+> The type of the action that is dispatched (`<PREFIX>_SUCCESS` or `<PREFIX>_FAILURE`) is determined by the expected values.
+> See [expect](#expectvalues)
+
 ## API documentation
 
 ### Actions
 
 When a FetchAction is dispatched, 4 kinds of "regular" redux actions can be handled by the reducer. Here are their type definitions,
-with `<PREFIX>` being the string given to the `FetchAction`'s contructor.
+with `<PREFIX>` being the string given to `FetchAction`'s contructor.
 
 #### Request action:
 
 ```
 {
   type: '<PREFIX>_REQUEST',
+  method: string,
   url: string,
   body: string | Object,
   ...options,
@@ -134,12 +138,29 @@ See [Success action](#success-action). Only the `_SUCCESS` is replaced with `_FA
 
 The duration is in milliseconds.
 
+### Dispatch return value
+
+A call to dispatch with a `FetchAction` returns a
+[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+that resolves an objet of type:
+
+```
+{
+  response: Response,
+  duration: number,
+  body: any,
+}
+```
+
+- response: The [response](https://developer.mozilla.org/en-US/docs/Web/API/Response) resolved by the call to fetch
+- duration: The time that took the request (ms)
+- body: The response payload
+
 ### FetchAction
 
 The `FetchAction` class intends to represent a call to a HTTP server. A `prefix` must be provided when instanciating a new `FetchAction`
-in order to generate the types of the resulting request, success, failure and finish actions. Appart from the prefix, any other
-configuration is optional. Every method of the `FetchAction` class returns the class instance in order to be chained, like real js
-developers like to do.
+in order to generate the types of the resulting actions. Appart from the prefix, any other configuration is optional. Every method of
+the `FetchAction` class returns `this` in order to be chained, like real js developers like to do.
 
 Here is a list of all the methods that can be called to configure a `FetchAction`:
 
@@ -155,14 +176,15 @@ Here is a list of all the methods that can be called to configure a `FetchAction
 
 #### HTTP_METHOD(route)
 
-Configure the method and the route that will be used. Obviously, `HTTP_METHOD` should be replaced with the appropriate method, in lower case.
-The route is appened to the base url given to the middleware configuration, if any (and if not, the full url can be provided instead of the route).
+Set the method and the route that will be used to perform the request. Obviously, `HTTP_METHOD` should be replaced with the appropriate method, in lower case.
+The route is appened to the base url given to the middleware configuration, if any (and if not, a full url can be provided instead of the route).
 
 #### body(obj)
 
-Set the body that will be sent with the request. If `obj` is an objet, it will be stringified and the request's `Content-Type` header will be
+Set the body that will be sent as the request payload. If `obj` is an objet, it will be stringified and the request's `Content-Type` header will be
 set to `application/json`. In other cases, the request's `Content-Type` will be set to `text/plain`.
-Maybe something smarter can be done here, let me know if you think of something else.
+
+> Maybe something smarter can be done here, let me know if you think of anything else.
 
 #### header(key, value)
 
@@ -177,9 +199,9 @@ Add custom options to the call to fetch. The object will be merged with already 
 Set the expected status code(s). `values` can be either an integer or an array of integers.
 
 When the request has finished, a _success_ action will be triggered if the actual request status code is within the expected values. In the same way,
-a _failure_ actionwill be triggered instead if the status code does not appear in the expected values.
+a _failure_ action will be triggered instead if the status code does not appear in the expected values.
 
-If no expeceted values are set, the type of event that is dispatched is based on [`res.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok).
+If no expeceted values are set, the type of event that is dispatched is based on [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok).
 
 #### onRequest(callback)
 
@@ -249,9 +271,15 @@ The middleware can be configured with several options given as an objet to the `
 All configuration values are optional.
 
 ```
-config = {
+{
   fetch: Function,
   baseUrl: string,
+  suffixes: {
+    request: string,
+    success: string,
+    failure: string,
+    finish: string,
+  },
   onRequest: Function,
   onSuccess: Function,
   onFailure: Function,
@@ -260,38 +288,20 @@ config = {
 ```
 
 - fetch: Custom [fetch](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch) implementation
-- baseUrl: The base URL that will be prefixed to any request's route
+- baseUrl: The base URL that will be prefixed to any request route
 - suffixes: An objet defining the suffixes to be used in the action types
 - onRequest: A callback function that will be invoked before any request (see [FetchAction.onRequest](#onrequestcallback))
 - onSuccess: A callback function that will be invoked after a request succeeded (see [FetchAction.onSuccess](#onsuccesscallback))
 - onFailure: A callback function that will be invoked after a request failed (see [FetchAction.onFailure](#onfailurecallback))
 - onFinish: A callback function that will be invoked after any request (see [FetchAction.onFinish](#onfinishcallback))
 
-> The `FetchAction` callback takes precedence over the one defined in the configuration if both are defined.
-
-### Dispatch return
-
-A call to dispatch with a `FetchAction` returns a
-[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-that resolves an objet of type:
-
-```
-{
-  response: Response,
-  duration: number,
-  body: any,
-}
-```
-
-- response: The [response](https://developer.mozilla.org/en-US/docs/Web/API/Response) resolved by the call to fetch
-- duration: The time that took the request (ms)
-- body: The response payload
+> If a callback is defined both in the `FetchAction` and in the configuration, the `FetchAction`'s callback takes precedence.
 
 ### createFetchActionTypes(prefix)
 
 A helper function to define the four action types with the default suffixes.
 
-```
+```js
 console.log(createFetchActionTypes('LOAD_DATA'));
 
 /*
@@ -313,7 +323,7 @@ with appropriate status and content type header. A simple implementation of this
 
 ```js
 const fetchMiddleware = createFetchMiddleware({
-  baseUrl: 'http://some.host/api',
+  baseUrl: 'http://some.api',
 });
 
 const reducer = (state = [], action) => {
@@ -325,8 +335,7 @@ const reducer = (state = [], action) => {
 
 const store = createStore(reducer, applyMiddleware(fetchMiddleware));
 
-const hello = new FetchAction('HELLO')
-  .get('/');
+const hello = new FetchAction('HELLO');
 
 const fail400 = new FetchAction('FAIL_400')
   .put('/400')
@@ -351,39 +360,23 @@ Promise.resolve()
 
 /*
 [
-  { type: 'HELLO_REQUEST', url: 'http://localhost:4242/', method: 'GET' },
-  { type: 'HELLO_SUCCESS', status: 200, duration: 12 },
-  { type: 'HELLO_FINISH', duration: 12 },
+  { type: 'HELLO_REQUEST', url: 'http://some.api', method: 'GET' },
+  { type: 'HELLO_SUCCESS', status: 200, duration: 123 },
+  { type: 'HELLO_FINISH', duration: 123 },
 
-  { type: 'FAIL_400_REQUEST', url: 'http://localhost:4242/400', headers: { 'Content-Type': 'application/json' }, method: 'PUT', body: { some: 'body' } },
-  { type: 'FAIL_400_FAILURE', status: 400, duration: 2 },
-  { type: 'FAIL_400_FINISH', duration: 2 },
+  { type: 'FAIL_400_REQUEST', url: 'http://some.api/400', headers: { 'Content-Type': 'application/json' }, method: 'PUT', body: { some: 'body' } },
+  { type: 'FAIL_400_FAILURE', status: 400, duration: 123 },
+  { type: 'FAIL_400_FINISH', duration: 123 },
 
-  { type: 'FAIL_200_REQUEST', url: 'http://localhost:4242/', method: 'GET' },
-  { type: 'FAIL_200_FAILURE', status: 200, duration: 0 },
-  { type: 'FAIL_200_FINISH', duration: 0 },
+  { type: 'FAIL_200_REQUEST', url: 'http://some.api', method: 'GET' },
+  { type: 'FAIL_200_FAILURE', status: 200, duration: 123 },
+  { type: 'FAIL_200_FINISH', duration: 123 },
 
-  { type: 'OK_500_REQUEST', url: 'http://localhost:4242/500/text', headers: { Custom: 42 }, method: 'GET', cache: 'no-cache', mode: 'cors' },
-  { type: 'OK_500_SUCCESS', status: 500, duration: 1, body: 'GET /500/text -> 500' },
-  { type: 'OK_500_FINISH', duration: 1 },
+  { type: 'OK_500_REQUEST', url: 'http://some.api/500/text', headers: { Custom: 42 }, method: 'GET', cache: 'no-cache', mode: 'cors' },
+  { type: 'OK_500_SUCCESS', status: 500, duration: 123, body: 'GET /500/text -> 500' },
+  { type: 'OK_500_FINISH', duration: 123 },
 ]
 */
-```
-
-### With custom suffixes:
-
-```js
-const fetchMiddleware = createFetchMiddleware({
-  baseUrl: 'http://some.host/api',
-  suffixes: {
-    request: '-START',
-    success: '-OK',
-    failure: '-FAIL',
-    finish: '-DONE',
-  },
-});
-
-/* ... */
 ```
 
 ### Using createFetchActionTypes
@@ -392,7 +385,7 @@ const fetchMiddleware = createFetchMiddleware({
 const FETCH_PLAYER = createFetchActionTypes('FETCH_PLAYER');
 const fetchPlayer = playerId => {
   return new FetchAction('FETCH_PLAYER')
-    .get('/players/' + playerId);
+    .get('/player/' + playerId);
 }
 
 const reducer = (state = {
@@ -423,14 +416,21 @@ const reducer = (state = {
 
 ```js
 const fetchMiddleware = createFetchMiddleware({
-  baseUrl: 'http://some.host/api',
+  baseUrl: 'http://some.api',
   onRequest: () => false,
   onSuccess: () => false,
   onFailure: () => false,
   onFinish: () => false,
 });
 
-/* ... */
+const reducer = (state = [], action) => {
+  if (action.type.startsWith('@@redux'))
+    return state;
+
+  return [ ...state, action ];
+};
+
+const store = createStore(reducer, applyMiddleware(fetchMiddleware));
 
 const hello = new FetchAction('HELLO')
   .get('/418/json')
@@ -468,9 +468,9 @@ Request terminated.
 statusText: I'm a teapot
 [
   { type: "LOADING" },
-  { type: "STORE_DATA", data: { method: "GET", url: "/418/json", ... } },
-  { type: "HELLO_SUCCESS", status: 418, duration: 12, body: { method: "GET", url: "/418/json", ... } },
-  { type: "LOADING_FINISH", duration: 12 },
+  { type: "STORE_DATA", data: { method: "GET", url: "http://some.api/418/json", ... } },
+  { type: "HELLO_SUCCESS", status: 418, duration: 123, body: { method: "GET", url: "http://some.api/418/json", ... } },
+  { type: "LOADING_FINISH", duration: 123 },
 ]
 */
 ```
