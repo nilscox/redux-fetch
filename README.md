@@ -23,7 +23,7 @@ such as a `new FetchAction('FETCH_DATA')`, and the middleware will dispatch seve
 
 As this package is not published on npmjs yet, it can only be installed from this github repository:
 
-```
+```sh
 yarn add nilscox/redux-fetch
 ```
 
@@ -49,7 +49,7 @@ store.dispatch(action);
 
 Assuming the call to `http://some.api/user/login` with the provided credentials works as expected, this code will dispatch 3 actions:
 
-```
+```js
 {
   type: 'USER_LOGIN_REQUEST',
   url: 'http://some.api/user/login',
@@ -64,7 +64,7 @@ Assuming the call to `http://some.api/user/login` with the provided credentials 
 }
 ```
 
-```
+```js
 {
   type: 'USER_LOGIN_SUCCESS',
   status: 200,
@@ -77,7 +77,7 @@ Assuming the call to `http://some.api/user/login` with the provided credentials 
 }
 ```
 
-```
+```js
 {
   type: 'USER_LOGIN_FINISH',
   duration: 421,
