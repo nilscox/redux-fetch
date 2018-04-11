@@ -250,7 +250,7 @@ All configuration values are optional.
 
 ```
 config = {
-  fetch: [Function](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch),
+  fetch: Function,
   baseUrl: string,
   onRequest: Function,
   onSuccess: Function,
@@ -259,9 +259,9 @@ config = {
 }
 ```
 
-- fetch: Custom fetch implementation or wrapper around fetch.
-- baseUrl: The base URL that will be prefixed to any request's route.
-- suffixes: An objet defining the suffixes to be used in the action types.
+- fetch: Custom [fetch](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch) implementation
+- baseUrl: The base URL that will be prefixed to any request's route
+- suffixes: An objet defining the suffixes to be used in the action types
 - onRequest: A callback function that will be invoked before any request (see [FetchAction.onRequest](#onrequestcallback))
 - onSuccess: A callback function that will be invoked after a request succeeded (see [FetchAction.onSuccess](#onsuccesscallback))
 - onFailure: A callback function that will be invoked after a request failed (see [FetchAction.onFailure](#onfailurecallback))
@@ -277,13 +277,13 @@ that resolves an objet of type:
 
 ```
 {
-  response: [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response),
+  response: Response,
   duration: number,
   body: any,
 }
 ```
 
-- result: The response resolved by the call to fetch
+- response: The [response](https://developer.mozilla.org/en-US/docs/Web/API/Response) resolved by the call to fetch
 - duration: The time that took the request (ms)
 - body: The response payload
 
