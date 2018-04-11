@@ -100,34 +100,6 @@ class FetchAction {
   }
 }
 
-function ExtendableBuiltin(cls) {
-    function ExtendableBuiltin(){
-        cls.apply(this, arguments);
-    }
-
-    ExtendableBuiltin.prototype = Object.create(cls.prototype);
-    Object.setPrototypeOf(ExtendableBuiltin, cls);
-
-    return ExtendableBuiltin;
-}
-
-class FetchError extends ExtendableBuiltin(Error) {
-  constructor(url, opts, response, body) {
-    super([
-      opts.method || 'GET',
-      url,
-      '->',
-      response.status,
-      // ['(', response.statusText, ')'].join(''),
-    ].join(' '));
-
-    this.url = url;
-    this.opts = opts;
-    this.response = response;
-    this.body = body;
-  }
-}
-
 const fetchMiddleware = opts => store => next => action => {
   if (!(action instanceof FetchAction))
     return next(action);
@@ -237,5 +209,4 @@ const createFetchActionTypes = prefix => ({
 
 module.exports = configure;
 module.exports.FetchAction = FetchAction;
-module.exports.FetchError = FetchError;
 module.exports.createFetchActionTypes = createFetchActionTypes;
