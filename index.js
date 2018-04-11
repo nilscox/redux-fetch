@@ -180,7 +180,7 @@ const fetchMiddleware = opts => store => next => action => {
     .then(parseBody)
     .then(dispatchResult)
     .then(dispatchFinish)
-    .then(() => ({ result: res, duration, body }));
+    .then(() => ({ response: res, duration, body }));
 };
 
 const defaultConfig = {

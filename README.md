@@ -269,14 +269,15 @@ config = {
 
 > The `FetchAction` callback takes precedence over the one defined in the configuration if both are defined.
 
-### Return
+### Dispatch return
 
-The middleware returns a [Promise](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Promise)
+A call to dispatch with a `FetchAction` returns a
+[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 that resolves an objet of type:
 
 ```
 {
-  result: [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response),
+  response: [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response),
   duration: number,
   body: any,
 }
