@@ -6,16 +6,18 @@ Yet another [redux middleware](https://redux.js.org/docs/advanced/Middleware.htm
 
 This library is at a very early stage of development and will eventually be published on npmjs some day.
 Any ideas, [issue reports](https://github.com/nilscox/redux-fetch/issues),
-[pull requests](https://github.com/nilscox/redux-fetch/pulls) or contribution of any kind are welcome.
+[pull requests](https://github.com/nilscox/redux-fetch/pulls) or contributions of any kind are welcome.
 
-`redux-fetch` attempts to provide a simple, yet complete API to perform HTTP calls easily in [redux](https://redux.js.org).
-The philosophy is quite simple: the middleware handles actions describing a call to an HTTP server. Basically, what you
-can do is dispatch a `new FetchAction('FETCH_DATA')`, which trigger several actions:
+_redux-fetch_ attempts to provide a simple, yet complete API to perform HTTP calls easily with [redux](https://redux.js.org).
 
-- `{ type: 'FETCH_DATA_REQUEST', ... }`: right before the request starts
-- `{ type: 'FETCH_DATA_SUCCESS', ... }`: after the request finished, if everything went fine
-- `{ type: 'FETCH_DATA_FAILURE', ... }`: after the request finished, if someting went wrong
-- `{ type: 'FETCH_DATA_FINISH', ... }`: after the request finished
+The philosophy remains quite simple: you can dispatch an action describing a call to an HTTP server,
+such as a `new FetchAction('FETCH_DATA')`, and the middleware will dispatch several
+[redux actions](https://redux.js.org/basics/actions) with types:
+
+- `FETCH_DATA_REQUEST`: right before the request starts
+- `FETCH_DATA_SUCCESS`: after the request finished, if everything went fine
+- `FETCH_DATA_FAILURE`: after the request finished, if someting went wrong
+- `FETCH_DATA_FINISH`: after the request finished
 
 ## Installation
 
@@ -144,7 +146,7 @@ Here is a list of all the methods that can be called to configure a `FetchAction
 - [HTTP_METHOD(route)](#http_methodroute)
 - [body(obj)](#bodyobj)
 - [header(key, value)](#headerkey-value)
-- [opts(obj)](#bodyobj)
+- [opts(obj)](#optsobj)
 - [expect(values)](#expectvalues)
 - [onRequest(callback)](#onrequestcallback)
 - [onSuccess(callback)](#onsuccesscallback)
@@ -153,8 +155,8 @@ Here is a list of all the methods that can be called to configure a `FetchAction
 
 #### HTTP_METHOD(route)
 
-Configure the method and the route that will be used. Obviously, `HTTP_METHOD` should be replaced with the appropriate method, in lowercase.
-The route is appened to the base url given to the middleware configuration, if any (and if not, the full url can be set instead of the route).
+Configure the method and the route that will be used. Obviously, `HTTP_METHOD` should be replaced with the appropriate method, in lower case.
+The route is appened to the base url given to the middleware configuration, if any (and if not, the full url can be provided instead of the route).
 
 #### body(obj)
 
@@ -164,7 +166,7 @@ Maybe something smarter can be done here, let me know if you think of something 
 
 #### header(key, value)
 
-Set a HTTP header field that will be sent with the request. This can be used to override the `Content-Type` set by a call to `body`.
+Set a HTTP header field that will be sent with the request. This can be used to override the `Content-Type` set by a call to [body](#bodyobj).
 
 #### opts(obj)
 
@@ -172,12 +174,12 @@ Add custom options to the call to fetch. The object will be merged with already 
 
 #### expect(values)
 
-Set the expected status code(s). `values` can be either an integer or an array of integer.
+Set the expected status code(s). `values` can be either an integer or an array of integers.
 
-When the request has finished, a _success_ will be triggered if the actual request status code is within the expected values. In the same way,
-a _failure_ will be triggered instead if the status code does not appear in the expected values.
+When the request has finished, a _success_ action will be triggered if the actual request status code is within the expected values. In the same way,
+a _failure_ actionwill be triggered instead if the status code does not appear in the expected values.
 
-If no expeceted values are set, the kind of event that is dispatched is based on [`res.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok).
+If no expeceted values are set, the type of event that is dispatched is based on [`res.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok).
 
 #### onRequest(callback)
 
@@ -189,11 +191,11 @@ Provide a callback to be invoked before the request starts. Its signature is:
 
 - dispatch: Redux's disptach function
 - getState: Redux's getState function
-- url: The request's url (prefixed with baseUrl)
+- url: The requested url (eventually prefixed with baseUrl)
 - opts: The options passed to fetch
-- body (optional): The request's body
+- body (optional): The request body
 
-If the callback returns false, the `_REQUEST` action will not be dispatched.
+If the callback returns false, the `<PREFIX>_REQUEST` action will not be dispatched.
 
 #### onSuccess(callback)
 
@@ -205,11 +207,11 @@ Provide a callback to be invoked when the request succeeded. Its signature is:
 
 - dispatch: Redux's disptach function
 - getState: Redux's getState function
-- status: The response's status code
+- status: The response status code
 - duration: The time that the request took (ms)
-- body: The response's body
+- body: The response body
 
-If the callback returns false, the `_SUCCESS` action will not be dispatched.
+If the callback returns false, the `<PREFIX>_SUCCESS` action will not be dispatched.
 
 #### onFailure(callback)
 
@@ -221,11 +223,11 @@ Provide a callback to be invoked when the request failed. Its signature is:
 
 - dispatch: Redux's disptach function
 - getState: Redux's getState function
-- status: The response's status code
+- status: The response status code
 - duration: The time that the request took (ms)
-- body: The response's body
+- body: The response body
 
-If the callback returns false, the `_FAILURE` action will not be dispatched.
+If the callback returns false, the `<PREFIX>_FAILURE` action will not be dispatched.
 
 #### onFinish(callback)
 
@@ -239,20 +241,31 @@ Provide a callback to be invoked when the request has terminated. Its signature 
 - getState: Redux's getState function
 - duration: The time that the request took (ms)
 
-If the callback returns false, the `_FINISH` action will not be dispatched.
+If the callback returns false, the `<PREFIX>_FINISH` action will not be dispatched.
 
 ### Configuration
 
-The middleware can be configured with several options given as an objet to the createFetchMiddleware function.
+The middleware can be configured with several options given as an objet to the `createFetchMiddleware` function.
 All configuration values are optional.
 
-- `fetch`: Custom fetch implementation or wrapper around fetch.
-- `baseUrl`: The base URL that will be prefixed to any request's route.
-- `suffixes`: An objet defining the suffixes to be used in the action types.
-- `onRequest`: A callback function that will be invoked before any request (see [FetchAction.onRequest](#onrequestcallback))
-- `onSuccess`: A callback function that will be invoked after a request succeeded (see [FetchAction.onSuccess](#onsuccesscallback))
-- `onFailure`: A callback function that will be invoked after a request failed (see [FetchAction.onFailure](#onfailurecallback))
-- `onFinish`: A callback function that will be invoked after any request (see [FetchAction.onFinish](#onfinishcallback))
+```
+config = {
+  fetch: [Function](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch),
+  baseUrl: string,
+  onRequest: Function,
+  onSuccess: Function,
+  onFailure: Function,
+  onFinish: Function,
+}
+```
+
+- fetch: Custom fetch implementation or wrapper around fetch.
+- baseUrl: The base URL that will be prefixed to any request's route.
+- suffixes: An objet defining the suffixes to be used in the action types.
+- onRequest: A callback function that will be invoked before any request (see [FetchAction.onRequest](#onrequestcallback))
+- onSuccess: A callback function that will be invoked after a request succeeded (see [FetchAction.onSuccess](#onsuccesscallback))
+- onFailure: A callback function that will be invoked after a request failed (see [FetchAction.onFailure](#onfailurecallback))
+- onFinish: A callback function that will be invoked after any request (see [FetchAction.onFinish](#onfinishcallback))
 
 > The `FetchAction` callback takes precedence over the one defined in the configuration if both are defined.
 
