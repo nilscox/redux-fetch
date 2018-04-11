@@ -2,7 +2,7 @@ const assert = require('assert');
 const http = require('http');
 const fetch = require('node-fetch');
 const { createStore, applyMiddleware } = require('redux');
-const reduxFetch = require('.');
+const { FetchAction, createFetchMiddleware, } = require('.');
 
 const baseConfig = {
   baseUrl: 'http://localhost:7357',
@@ -44,8 +44,6 @@ const withServer = async f => {
   server.close();
 };
 
-const FetchAction = reduxFetch.FetchAction;
-
 const test = async (config, action, expected) => {
   let idx = 0;
 
@@ -59,7 +57,7 @@ const test = async (config, action, expected) => {
       assertion(action);
   };
 
-  const fetchMiddleware = reduxFetch.createMiddlware(config);
+  const fetchMiddleware = createFetchMiddleware(config);
   const store = createStore(reducer, applyMiddleware(fetchMiddleware));
   const result = await store.dispatch(action);
 
