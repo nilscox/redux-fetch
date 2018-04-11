@@ -5,7 +5,7 @@ const { createStore, applyMiddleware } = require('redux');
 const promiseMiddleware = require('redux-promise');
 const reduxFetch = require('.');
 
-const fetchMiddleware = reduxFetch({
+const fetchMiddleware = reduxFetch.createMiddlware({
   baseUrl: 'http://localhost:7357',
 });
 

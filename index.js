@@ -1,4 +1,4 @@
-const fetch = require('isomorphic-fetch');
+const isomorphicFetch = require('isomorphic-fetch');
 
 class FetchAction {
   static buildQueryString(params) {
@@ -183,30 +183,30 @@ const fetchMiddleware = opts => store => next => action => {
     .then(() => ({ result: res, duration, body }));
 };
 
-const configure = opts => {
-  let { baseUrl, suffixes, fetch: _fetch } = opts || {};
+const defaultConfig = {
+  fetch: isomorphicFetch,
+  baseUrl: '',
+  suffixes: {
+    request: '_REQUEST',
+    success: '_SUCCESS',
+    failure: '_FAILURE',
+    finish: '_FINISH',
+  },
+};
 
-  suffixes = suffixes || {};
-  suffixes.request = suffixes.request || '_REQUEST';
-  suffixes.success = suffixes.success || '_SUCCESS';
-  suffixes.failure = suffixes.failure || '_FAILURE';
-  suffixes.finish = suffixes.finish || '_FINISH';
+const createMiddlware = config => {
+  config = Object.assign({}, defaultConfig, config);
 
-  return fetchMiddleware({
-    baseUrl: baseUrl || '',
-    suffixes,
-    fetch: _fetch || fetch,
-    ...opts,
-  });
+  return fetchMiddleware(config);
 };
 
 const createFetchActionTypes = prefix => ({
-  REQUEST: prefix + '_REQUEST',
-  SUCCESS: prefix + '_SUCCESS',
-  FAILURE: prefix + '_FAILURE',
-  FINISH: prefix + '_FINISH',
+  REQUEST: prefix + defaultConfig.suffixes.request,
+  SUCCESS: prefix + defaultConfig.suffixes.success,
+  FAILURE: prefix + defaultConfig.suffixes.failure,
+  FINISH: prefix + defaultConfig.suffixes.finish,
 });
 
-module.exports = configure;
 module.exports.FetchAction = FetchAction;
+module.exports.createMiddlware = createMiddlware;
 module.exports.createFetchActionTypes = createFetchActionTypes;
