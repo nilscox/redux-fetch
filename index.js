@@ -20,9 +20,7 @@ class FetchAction {
     this._prefix = prefix;
 
     this._route = '/';
-    this._opts = {
-      headers: {},
-    };
+    this._opts = {};
 
     this._expect = null;
 
@@ -61,7 +59,11 @@ class FetchAction {
   }
 
   header(key, value) {
+    if (!this._opts.headers)
+      this._opts.headers = {};
+
     this._opts.headers[key] = value;
+
     return this;
   }
 
@@ -149,13 +151,18 @@ const fetchMiddleware = opts => store => next => action => {
 
   const dispatchRequest = () => {
     if (!onRequest || onRequest(dispatch, getState, url, fetchOpts, body)) {
-      const contentType = fetchOpts.headers['Content-Type'];
+      const contentType = fetchOpts.headers && fetchOpts.headers['Content-Type'];
       let body = fetchOpts.body;
 
       if (contentType && contentType.match(/^application\/json/))
         body = JSON.parse(body);
 
-      dispatch({ type: prefix + suffixes.request, url, ...fetchOpts, body });
+      const action = { type: prefix + suffixes.request, url, ...fetchOpts };
+
+      if (body)
+        action.body = body;
+
+      dispatch(action);
     }
   };
 
@@ -165,8 +172,14 @@ const fetchMiddleware = opts => store => next => action => {
     const f = ok ? onSuccess : onFailure;
     const suffix = ok ? suffixes.success : suffixes.failure;
 
-    if (!f || f(dispatch, getState, status, body, duration))
-      dispatch({ type: prefix + suffix, status, body, duration });
+    if (!f || f(dispatch, getState, status, body, duration)) {
+      const action = { type: prefix + suffix, status, duration };
+
+      if (body)
+        action.body = body;
+
+      dispatch(action);
+    }
   };
 
   const dispatchFinish = () => {
