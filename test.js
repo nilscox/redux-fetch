@@ -254,10 +254,26 @@ const test_callbacks = async () => {
         await test(baseConfig, action, expect);
       };
 
+      const test_onRequest_param_other = async () => {
+        const action = new FetchAction('HELLO')
+          .body('coucou')
+          .onRequest((dispatch, getState, url, opts, body) => {
+            assert.strictEqual(typeof dispatch, 'function');
+            assert.strictEqual(typeof getState, 'function');
+
+            return true;
+          });
+
+        const expect = [null, null, null];
+
+        await test(baseConfig, action, expect);
+      };
+
       await Promise.all([
         test_onRequest_param_url(),
-        test_onRequest_param_url(),
-        test_onRequest_param_url(),
+        test_onRequest_param_opts(),
+        test_onRequest_param_body(),
+        test_onRequest_param_other(),
       ]);
     };
 
@@ -298,6 +314,8 @@ const test_callbacks = async () => {
       const action = new FetchAction('HELLO')
         .put('/202/json')
         .onSuccess((dispatch, getState, status, body, duration) => {
+          assert.strictEqual(typeof dispatch, 'function');
+          assert.strictEqual(typeof getState, 'function');
           assert.strictEqual(typeof duration, 'number');
           assert.strictEqual(status, 202);
           assert.deepEqual(body, {
@@ -352,6 +370,8 @@ const test_callbacks = async () => {
       const action = new FetchAction('HELLO')
         .patch('/404/text')
         .onFailure((dispatch, getState, status, body, duration) => {
+          assert.strictEqual(typeof dispatch, 'function');
+          assert.strictEqual(typeof getState, 'function');
           assert.strictEqual(typeof duration, 'number');
           assert.strictEqual(status, 404);
           assert.strictEqual(body, 'PATCH /404/text -> 404');
@@ -400,6 +420,8 @@ const test_callbacks = async () => {
     const test_onFinish_params = async () => {
       const action = new FetchAction('HELLO')
         .onFinish((dispatch, getState, duration) => {
+          assert.strictEqual(typeof dispatch, 'function');
+          assert.strictEqual(typeof getState, 'function');
           assert.strictEqual(typeof duration, 'number');
           return true;
         });
