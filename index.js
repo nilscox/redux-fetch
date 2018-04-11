@@ -52,7 +52,7 @@ class FetchAction {
       this._opts.body = JSON.stringify(body);
     } else {
       this.header('Content-Type', 'text/plain');
-      this._opts.body = new String(body);
+      this._opts.body = body;
     }
 
     return this;
@@ -150,13 +150,16 @@ const fetchMiddleware = opts => store => next => action => {
   };
 
   const dispatchRequest = () => {
-    if (!onRequest || onRequest(dispatch, getState, url, fetchOpts, body)) {
-      const contentType = fetchOpts.headers && fetchOpts.headers['Content-Type'];
-      let body = fetchOpts.body;
+    const contentType = fetchOpts.headers && fetchOpts.headers['Content-Type'];
+    let body = fetchOpts.body;
 
-      if (contentType && contentType.match(/^application\/json/))
+    if (contentType && contentType.match(/^application\/json/)) {
+      try {
         body = JSON.parse(body);
+      } catch (err) {}
+    }
 
+    if (!onRequest || onRequest(dispatch, getState, url, fetchOpts, body)) {
       const action = { type: prefix + suffixes.request, url, ...fetchOpts };
 
       if (body)
