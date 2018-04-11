@@ -188,6 +188,242 @@ const test_contentType = async () => {
   ]);
 };
 
+const test_callbacks = async () => {
+  const test_onRequest = async () => {
+    const test_onRequest_return_true = async () => {
+      const action = new FetchAction('HELLO')
+        .onRequest(() => true);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onRequest_return_false = async () => {
+      const action = new FetchAction('HELLO')
+        .onRequest(() => false);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onRequest_params = async () => {
+      const test_onRequest_param_url = async () => {
+        const action = new FetchAction('HELLO')
+          .onRequest((dispatch, getState, url, opts, body) => {
+            assert.strictEqual(url, 'http://localhost:7357/');
+            return true;
+          });
+
+        const expect = [null, null, null];
+
+        await test(baseConfig, action, expect);
+      };
+
+      const test_onRequest_param_opts = async () => {
+        const action = new FetchAction('HELLO')
+          .opts({ custom: 42 })
+          .onRequest((dispatch, getState, url, opts, body) => {
+            assert.deepEqual(opts, { custom: 42 });
+            return true;
+          });
+
+        const expect = [null, null, null];
+
+        await test(baseConfig, action, expect);
+      };
+
+      const test_onRequest_param_body = async () => {
+        const action = new FetchAction('HELLO')
+          .body('coucou')
+          .onRequest((dispatch, getState, url, opts, body) => {
+            assert.deepEqual(body, 'coucou');
+            return true;
+          });
+
+        const expect = [null, null, null];
+
+        await test(baseConfig, action, expect);
+      };
+
+      await Promise.all([
+        test_onRequest_param_url(),
+        test_onRequest_param_url(),
+        test_onRequest_param_url(),
+      ]);
+    };
+
+    await Promise.all([
+      test_onRequest_return_true(),
+      test_onRequest_return_false(),
+      test_onRequest_params(),
+    ]);
+  };
+
+  const test_onSuccess = async () => {
+    const test_onSuccess_return_true = async () => {
+      const action = new FetchAction('HELLO')
+        .onSuccess(() => true);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onSuccess_return_false = async () => {
+      const action = new FetchAction('HELLO')
+        .onSuccess(() => false);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onSuccess_params = async () => {
+      const action = new FetchAction('HELLO')
+        .put('/202/json')
+        .onSuccess((dispatch, getState, status, body, duration) => {
+          assert.strictEqual(typeof duration, 'number');
+          assert.strictEqual(status, 202);
+          assert.deepEqual(body, {
+            method: 'PUT',
+            url: '/202/json',
+            contentType: 'json',
+            status: 202,
+          });
+
+          return true;
+        });
+
+      const expect = [null, null, null];
+
+      await test(baseConfig, action, expect);
+    };
+
+    await Promise.all([
+      test_onSuccess_return_true(),
+      test_onSuccess_return_false(),
+      test_onSuccess_params(),
+    ]);
+  };
+
+  const test_onFailure = async () => {
+    const test_onFailure_return_true = async () => {
+      const action = new FetchAction('HELLO')
+        .onFailure(() => true);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onFailure_return_false = async () => {
+      const action = new FetchAction('HELLO')
+        .onSuccess(() => false);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onFailure_params = async () => {
+      const action = new FetchAction('HELLO')
+        .patch('/404/text')
+        .onFailure((dispatch, getState, status, body, duration) => {
+          assert.strictEqual(typeof duration, 'number');
+          assert.strictEqual(status, 404);
+          assert.strictEqual(body, 'PATCH /404/text -> 404');
+
+          return true;
+        });
+
+      const expect = [null, null, null];
+
+      await test(baseConfig, action, expect);
+    };
+
+    await Promise.all([
+      test_onFailure_return_true(),
+      test_onFailure_return_false(),
+      test_onFailure_params(),
+    ]);
+  };
+
+  const test_onFinish = async () => {
+    const test_onFinish_return_true = async () => {
+      const action = new FetchAction('HELLO')
+        .onFinish(() => true);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
+        action => assert.strictEqual(action.type, 'HELLO_FINISH'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onFinish_return_false = async () => {
+      const action = new FetchAction('HELLO')
+        .onFinish(() => false);
+
+      const expect = [
+        action => assert.strictEqual(action.type, 'HELLO_REQUEST'),
+        action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
+      ];
+
+      await test(baseConfig, action, expect);
+    };
+
+    const test_onFinish_params = async () => {
+      const action = new FetchAction('HELLO')
+        .onFinish((dispatch, getState, duration) => {
+          assert.strictEqual(typeof duration, 'number');
+          return true;
+        });
+
+      const expect = [null, null, null];
+
+      await test(baseConfig, action, expect);
+    };
+
+    await Promise.all([
+      test_onFinish_return_true(),
+      test_onFinish_return_false(),
+      test_onFinish_params(),
+    ]);
+  };
+
+  await Promise.all([
+    test_onRequest(),
+    test_onSuccess(),
+    test_onFailure(),
+    test_onFinish(),
+  ]);
+};
+
 withServer(async () => {
   try {
     await Promise.all([
@@ -197,6 +433,7 @@ withServer(async () => {
       test_opts(),
       test_expect(),
       test_contentType(),
+      test_callbacks(),
     ]);
   } catch (err) {
     console.error(err);

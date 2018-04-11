@@ -148,7 +148,7 @@ const fetchMiddleware = opts => store => next => action => {
   };
 
   const dispatchRequest = () => {
-    if (!onRequest || onRequest(dispatch, getState)) {
+    if (!onRequest || onRequest(dispatch, getState, url, fetchOpts, body)) {
       const contentType = fetchOpts.headers['Content-Type'];
       let body = fetchOpts.body;
 
@@ -165,7 +165,7 @@ const fetchMiddleware = opts => store => next => action => {
     const f = ok ? onSuccess : onFailure;
     const suffix = ok ? suffixes.success : suffixes.failure;
 
-    if (!f || f(dispatch, getState, status, body))
+    if (!f || f(dispatch, getState, status, body, duration))
       dispatch({ type: prefix + suffix, status, duration, body });
   };
 
