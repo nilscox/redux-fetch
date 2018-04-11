@@ -1,6 +1,5 @@
 const assert = require('assert');
 const http = require('http');
-const fetch = require('node-fetch');
 const { createStore, applyMiddleware } = require('redux');
 const { FetchAction, createFetchMiddleware, } = require('.');
 
