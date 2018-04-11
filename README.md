@@ -202,14 +202,14 @@ If the callback returns false, the `<PREFIX>_REQUEST` action will not be dispatc
 Provide a callback to be invoked when the request succeeded. Its signature is:
 
 ```
-(dispatch, getState, status, duration, body) -> boolean
+(dispatch, getState, status, body, duration) -> boolean
 ```
 
 - dispatch: Redux's disptach function
 - getState: Redux's getState function
 - status: The response status code
-- duration: The time that the request took (ms)
 - body: The response body
+- duration: The time that the request took (ms)
 
 If the callback returns false, the `<PREFIX>_SUCCESS` action will not be dispatched.
 
@@ -218,14 +218,14 @@ If the callback returns false, the `<PREFIX>_SUCCESS` action will not be dispatc
 Provide a callback to be invoked when the request failed. Its signature is:
 
 ```
-(dispatch, getState, status, duration, body) -> boolean
+(dispatch, getState, status, body, duration) -> boolean
 ```
 
 - dispatch: Redux's disptach function
 - getState: Redux's getState function
 - status: The response status code
-- duration: The time that the request took (ms)
 - body: The response body
+- duration: The time that the request took (ms)
 
 If the callback returns false, the `<PREFIX>_FAILURE` action will not be dispatched.
 
@@ -269,6 +269,23 @@ config = {
 
 > The `FetchAction` callback takes precedence over the one defined in the configuration if both are defined.
 
+### Return
+
+The middleware returns a [Promise](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Promise)
+that resolves an objet of type:
+
+```
+{
+  result: [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response),
+  duration: number,
+  body: any,
+}
+```
+
+- result: The response resolved by the call to fetch
+- duration: The time that took the request (ms)
+- body: The response payload
+
 ### createFetchActionTypes(prefix)
 
 A helper function to define the four action types with the default suffixes.
@@ -294,7 +311,7 @@ with appropriate status and content type header. A simple implementation of this
 ### Basic example:
 
 ```js
-const fetchMiddleware = reduxFetch.createMiddlware({
+const fetchMiddleware = createFetchMiddleware({
   baseUrl: 'http://some.host/api',
 });
 
@@ -329,16 +346,33 @@ Promise.resolve()
   .then(() => store.dispatch(fail400))
   .then(() => store.dispatch(fail200))
   .then(() => store.dispatch(ok500))
-  .then(() => {
-    const state = store.getState();
-    console.log(state.map(a => JSON.stringify(a)));
-  });
+  .then(() => console.log(store.getState()));
+
+/*
+[
+  { type: 'HELLO_REQUEST', url: 'http://localhost:4242/', method: 'GET' },
+  { type: 'HELLO_SUCCESS', status: 200, duration: 12 },
+  { type: 'HELLO_FINISH', duration: 12 },
+
+  { type: 'FAIL_400_REQUEST', url: 'http://localhost:4242/400', headers: { 'Content-Type': 'application/json' }, method: 'PUT', body: { some: 'body' } },
+  { type: 'FAIL_400_FAILURE', status: 400, duration: 2 },
+  { type: 'FAIL_400_FINISH', duration: 2 },
+
+  { type: 'FAIL_200_REQUEST', url: 'http://localhost:4242/', method: 'GET' },
+  { type: 'FAIL_200_FAILURE', status: 200, duration: 0 },
+  { type: 'FAIL_200_FINISH', duration: 0 },
+
+  { type: 'OK_500_REQUEST', url: 'http://localhost:4242/500/text', headers: { Custom: 42 }, method: 'GET', cache: 'no-cache', mode: 'cors' },
+  { type: 'OK_500_SUCCESS', status: 500, duration: 1, body: 'GET /500/text -> 500' },
+  { type: 'OK_500_FINISH', duration: 1 },
+]
+*/
 ```
 
 ### With custom suffixes:
 
 ```js
-const fetchMiddleware = reduxFetch.createMiddlware({
+const fetchMiddleware = createFetchMiddleware({
   baseUrl: 'http://some.host/api',
   suffixes: {
     request: '-START',
@@ -365,7 +399,7 @@ const reducer = (state = {
   player: null,
   error: null,
 }, action) => {
-  switch (action.type)
+  switch (action.type) {
     case FETCH_PLAYER.REQUEST:
       return { ...state, fetchingPlayer: true };
 
@@ -386,8 +420,8 @@ const reducer = (state = {
 
 ### Dispatching custom actions
 
-```
-const fetchMiddleware = reduxFetch.createMiddlware({
+```js
+const fetchMiddleware = createFetchMiddleware({
   baseUrl: 'http://some.host/api',
   onRequest: () => false,
   onSuccess: () => false,
@@ -407,7 +441,7 @@ const hello = new FetchAction('HELLO')
 
     return false;
   })
-  .onSuccess((dispatch, getState, status, duration, body) => {
+  .onSuccess((dispatch, getState, status, body, duration) => {
     console.log('Request succeeded!', 'status: ' + status);
 
     dispatch({ type: 'STORE_DATA', data: body });
@@ -423,10 +457,21 @@ const hello = new FetchAction('HELLO')
   });
 
 store.dispatch(hello)
-  .then(() => {
-    const state = store.getState();
-    console.log(state.map(a => JSON.stringify(a)));
-  });
+  .then(({ response, duration, body }) => console.log('statusText: ' + response.statusText))
+  .then(() => console.log(store.getState()));
+
+/*
+Starting request...
+Request succeeded! status: 418
+Request terminated.
+statusText: I'm a teapot
+[
+  { type: "LOADING" },
+  { type: "STORE_DATA", data: { method: "GET", url: "/418/json", ... } },
+  { type: "HELLO_SUCCESS", status: 418, duration: 12, body: { method: "GET", url: "/418/json", ... } },
+  { type: "LOADING_FINISH", duration: 12 },
+]
+*/
 ```
 
 ### License

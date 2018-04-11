@@ -166,7 +166,7 @@ const fetchMiddleware = opts => store => next => action => {
     const suffix = ok ? suffixes.success : suffixes.failure;
 
     if (!f || f(dispatch, getState, status, body, duration))
-      dispatch({ type: prefix + suffix, status, duration, body });
+      dispatch({ type: prefix + suffix, status, body, duration });
   };
 
   const dispatchFinish = () => {
@@ -194,7 +194,7 @@ const defaultConfig = {
   },
 };
 
-const createMiddlware = config => {
+const createMiddleware = config => {
   config = Object.assign({}, defaultConfig, config);
 
   return fetchMiddleware(config);
@@ -208,5 +208,5 @@ const createFetchActionTypes = prefix => ({
 });
 
 module.exports.FetchAction = FetchAction;
-module.exports.createMiddlware = createMiddlware;
+module.exports.createFetchMiddleware = createMiddleware;
 module.exports.createFetchActionTypes = createFetchActionTypes;
