@@ -2,12 +2,11 @@ const assert = require('assert');
 const http = require('http');
 const fetch = require('node-fetch');
 const { createStore, applyMiddleware } = require('redux');
-const promiseMiddleware = require('redux-promise');
 const reduxFetch = require('.');
 
-const fetchMiddleware = reduxFetch.createMiddlware({
+const baseConfig = {
   baseUrl: 'http://localhost:7357',
-});
+}
 
 const withServer = async f => {
   const server = http.createServer((req, res) => {
@@ -47,7 +46,7 @@ const withServer = async f => {
 
 const FetchAction = reduxFetch.FetchAction;
 
-const test = async (action, expected) => {
+const test = async (config, action, expected) => {
   let idx = 0;
 
   const reducer = (state, action) => {
@@ -60,11 +59,8 @@ const test = async (action, expected) => {
       assertion(action);
   };
 
-  const store = createStore(reducer, applyMiddleware(
-    fetchMiddleware,
-    promiseMiddleware,
-  ));
-
+  const fetchMiddleware = reduxFetch.createMiddlware(config);
+  const store = createStore(reducer, applyMiddleware(fetchMiddleware));
   const result = await store.dispatch(action);
 
   assert.strictEqual(idx, expected.length, [
@@ -77,13 +73,8 @@ const test = async (action, expected) => {
 };
 
 const test_noprefix = async () => {
-  const store = createStore(() => {}, applyMiddleware(
-    fetchMiddleware,
-    promiseMiddleware,
-  ));
-
   try {
-    await store.dispatch(new FetchAction());
+    new FetchAction();
   } catch (err) {
     assert(err.message.match(/prefix is required/));
   }
@@ -97,7 +88,7 @@ const test_prefix = async () => {
     action => assert.strictEqual(action.type, 'HELLO_FINISH'),
   ];
 
-  await test(action, expected);
+  await test(baseConfig, action, expected);
 };
 
 const test_url = async () => {
@@ -107,7 +98,7 @@ const test_url = async () => {
     null, null,
   ];
 
-  await test(action, expected);
+  await test(baseConfig, action, expected);
 };
 
 const test_opts = async () => {
@@ -120,7 +111,7 @@ const test_opts = async () => {
     null, null,
   ];
 
-  await test(action, expected);
+  await test(baseConfig, action, expected);
 };
 
 const test_expect = async () => {
@@ -165,27 +156,27 @@ const test_expect = async () => {
     expected: expectFailure,
   }];
 
-  await Promise.all(expect.map(o => test(o.action, o.expected)));
+  await Promise.all(expect.map(o => test(baseConfig, o.action, o.expected)));
 };
 
 const test_contentType = async () => {
   const test_contentType_json = async () => {
     const action = new FetchAction('HELLO').get('/200/json');
-    const result = await test(action, [null, null, null]);
+    const result = await test(baseConfig, action, [null, null, null]);
 
     assert.strictEqual(typeof result.body, 'object');
   };
 
   const test_contentType_text = async () => {
     const action = new FetchAction('HELLO').get('/200/text');
-    const result = await test(action, [null, null, null]);
+    const result = await test(baseConfig, action, [null, null, null]);
 
     assert.strictEqual(typeof result.body, 'string');
   };
 
   const test_contentType_none = async () => {
     const action = new FetchAction('HELLO');
-    const result = await test(action, [null, null, null]);
+    const result = await test(baseConfig, action, [null, null, null]);
 
     assert.strictEqual(typeof result.body, 'undefined');
   };
