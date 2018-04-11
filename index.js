@@ -152,6 +152,28 @@ const fetchMiddleware = opts => store => next => action => {
 
   let res = null;
   let body = null;
+  let duration = null;
+
+  const doFetch = () => {
+    const startDate = null;
+
+    return fetch(url, fetchOpts)
+      .then(r => res = r)
+      .then(() => duration = new Date() - startDate);
+  }
+
+  const parseBody = () => {
+    return Promise.resolve()
+      .then(() => {
+        const contentType = res.headers.get('Content-Type');
+
+        if (/^application\/json/.exec(contentType))
+          return res.json();
+        else if (/^text\//.exec(contentType))
+          return res.text();
+      })
+      .then(b => body = b);
+  };
 
   const dispatchRequest = () => {
     if (!onRequest || onRequest(dispatch, getState)) {
@@ -165,15 +187,6 @@ const fetchMiddleware = opts => store => next => action => {
     }
   };
 
-  const parseBody = () => {
-    const contentType = res.headers.get('Content-Type');
-
-    if (/^application\/json/.exec(contentType))
-      return res.json();
-    else if (/^text\//.exec(contentType))
-      return res.text();
-  };
-
   const dispatchResult = () => {
     const status = res.status;
     const ok = (!expect && res.ok) || (expect && expect.includes(status));
@@ -181,23 +194,21 @@ const fetchMiddleware = opts => store => next => action => {
     const suffix = ok ? suffixes.success : suffixes.failure;
 
     if (!f || f(dispatch, getState, status, body))
-      dispatch({ type: prefix + suffix, status, body });
+      dispatch({ type: prefix + suffix, status, duration, body });
   };
 
   const dispatchFinish = () => {
-    if (!onFinish || onFinish(dispatch, getState))
-      dispatch({ type: prefix + suffixes.finish });
+    if (!onFinish || onFinish(dispatch, getState, duration))
+      dispatch({ type: prefix + suffixes.finish, duration });
   };
 
   return Promise.resolve()
     .then(dispatchRequest)
-    .then(() => fetch(url, fetchOpts))
-    .then(r => res = r)
+    .then(doFetch)
     .then(parseBody)
-    .then(b => body = b)
     .then(dispatchResult)
     .then(dispatchFinish)
-    .then(() => ({ result: res, body }));
+    .then(() => ({ result: res, duration, body }));
 };
 
 const configure = opts => {
