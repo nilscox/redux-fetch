@@ -88,7 +88,7 @@ Assuming the call to `http://some.api/user/login` with the provided credentials 
 
 ### Actions
 
-When a FetchAction is dispatched, 4 kinds of "regular" redux actions can be handled by the reducer. Here their type definitions,
+When a FetchAction is dispatched, 4 kinds of "regular" redux actions can be handled by the reducer. Here are their type definitions,
 with `<PREFIX>` being the string given to the `FetchAction`'s contructor.
 
 #### Request action:
@@ -431,4 +431,4 @@ store.dispatch(hello)
 
 ### License
 
-[MIT]('./LICENSE.md')
+[MIT](./LICENSE.md)
