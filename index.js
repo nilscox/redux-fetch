@@ -127,7 +127,7 @@ const fetchMiddleware = opts => store => next => action => {
   let duration = null;
 
   const doFetch = () => {
-    const startDate = null;
+    const startDate = new Date();
 
     return fetch(url, fetchOpts)
       .then(r => res = r)
