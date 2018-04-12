@@ -69,16 +69,6 @@ const test = async (config, action, expected) => {
   return result;
 };
 
-const test_url = async () => {
-  const action = new FetchAction('HELLO').get('/walala');
-  const expected = [
-    action => assert.strictEqual(action.url, 'http://localhost:7357/walala'),
-    null, null,
-  ];
-
-  await test(baseConfig, action, expected);
-};
-
 const test_opts = async () => {
   const action = new FetchAction('HELLO').opts({ custom: 42 });
   const expected = [
