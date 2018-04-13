@@ -317,6 +317,50 @@ describe('redux-fetch', () => {
 
     });
 
+    describe('null', () => {
+      const action = new FetchAction(PREFIX).body(null);
+
+      it('should not include a body in the request', async () => {
+        const expected = [
+          action => expect(action).to.not.have.property('body'),
+          null, null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('body')),
+        });
+
+        await test(action, expected, config);
+      });
+
+      it('should set the Content-Type request header to application/json', async () => {
+        const expected = [
+          action => expect(action).to.not.have.nested.property('headers.content-type'),
+          null, null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(opts).to.not.have.nested.property('headers.content-type')),
+        });
+
+        await test(action, expected, config);
+      });
+
+      it('should set the Content-Length request header to 15', async () => {
+        const expected = [
+          action => expect(action).to.not.have.nested.property('headers.content-length'),
+          null, null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(opts).to.not.have.nested.property('headers.content-length')),
+        });
+
+        await test(action, expected, config);
+      });
+
+    });
+
   });
 
   describe('opts', () => {
