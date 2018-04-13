@@ -448,6 +448,14 @@ describe('redux-fetch', () => {
 
     });
 
+    describe('invalid', () => {
+
+      it('should throw an error when the body is not either null, a string or an object', () => {
+        expect(() => new FetchAction(PREFIX).body(42)).to.throw('invalid body type');
+      });
+
+    });
+
   });
 
   describe('opts', () => {
