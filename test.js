@@ -103,6 +103,80 @@ describe('redux-fetch', () => {
 
   });
 
+  describe('headers', () => {
+    const actions = {
+      noHeaders: new FetchAction(PREFIX),
+      singleHeader: new FetchAction(PREFIX).header('Foo', 'bar'),
+      multipleHeaders: new FetchAction(PREFIX).header('Foo', 'bar').header('Baz', 42),
+      overrideHeader: new FetchAction(PREFIX).header('Foo', 'bar').header('Foo', 42),
+    };
+
+    const expectConfig = {
+      noHeaders: makeConfig({
+        fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('headers')),
+      }),
+      singleHeader: makeConfig({
+        fetch: wrapFetch((url, opts) => expect(opts).to.nested.include({ 'headers.Foo': 'bar' })),
+      }),
+      multipleHeaders: makeConfig({
+        fetch: wrapFetch((url, opts) => {
+          expect(opts).to.nested.include({ 'headers.Foo': 'bar' });
+          expect(opts).to.nested.include({ 'headers.Baz': 42 });
+        }),
+      }),
+      overrideHeader: makeConfig({
+        fetch: wrapFetch((url, opts) => expect(opts).to.nested.include({ 'headers.Foo': 42 })),
+      }),
+    };
+
+    const expectAction = {
+      noHeaders: [
+        action => expect(action).to.not.have.property('headers'),
+        null,
+        null,
+      ],
+      singleHeader: [
+        action => expect(action).to.nested.include({ 'headers.Foo': 'bar' }),
+        null,
+        null,
+      ],
+      multipleHeaders: [
+        action => {
+          expect(action).to.nested.include({ 'headers.Foo': 'bar' });
+          expect(action).to.nested.include({ 'headers.Baz': 42 });
+        },
+        null,
+        null,
+      ],
+      overrideHeader: [
+        action => expect(action).to.nested.include({ 'headers.Foo': 42 }),
+        null,
+        null,
+      ],
+    };
+
+    it('should dispatch a request action with a no custom headers', async () => {
+      await test(actions.noHeaders, NULL3, expectConfig.noHeaders);
+      await test(actions.noHeaders, expectAction.noHeaders);
+    });
+
+    it('should call fetch and dispatch a request action with a single custom header', async () => {
+      await test(actions.singleHeader, NULL3, expectConfig.singleHeader);
+      await test(actions.singleHeader, expectAction.singleHeader);
+    });
+
+    it('should call fetch and dispatch a request action with multiple custom headers', async () => {
+      await test(actions.multipleHeaders, NULL3, expectConfig.multipleHeaders);
+      await test(actions.multipleHeaders, expectAction.multipleHeaders);
+    });
+
+    it('should call fetch and dispatch a request action with custom header override', async () => {
+      await test(actions.overrideHeader, NULL3, expectConfig.overrideHeader);
+      await test(actions.overrideHeader, expectAction.overrideHeader);
+    });
+
+  });
+
   describe('url', () => {
 
     describe('route', () => {
