@@ -77,10 +77,15 @@ class FetchAction {
     if (!this._opts.headers)
       this._opts.headers = {};
 
-    if (!value)
+    if (!value) {
       delete this._opts.headers[key];
-    else
+
+      if (Object.keys(this._opts.headers).length === 0)
+        delete this._opts.headers;
+    }
+    else {
       this._opts.headers[key] = value;
+    }
 
     return this;
   }
