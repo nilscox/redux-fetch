@@ -220,6 +220,69 @@ describe('redux-fetch', () => {
 
   });
 
+  describe('body', () => {
+
+    describe('string', () => {
+      const action = new FetchAction(PREFIX).body('coucou');
+
+      it('should set the request body to "coucou"', async () => {
+        const expected = [
+          action => expect(action).to.have.property('body', 'coucou'),
+          null,
+          null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(opts).to.have.property('body', 'coucou')),
+        });
+
+        await test(action, expected, config);
+      });
+
+      it('should set the Content-Type request header to text/plain', async () => {
+        const expected = [
+          action => {
+            expect(action).to.have.property('headers');
+            expect(action).to.satisfy(a => a.headers.get('Content-Type') === 'text/plain');
+          },
+          null,
+          null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => {
+            expect(opts).to.have.property('headers');
+            expect(opts).to.satisfy(o => o.headers.get('Content-Type') === 'text/plain');
+          }),
+        });
+
+        await test(action, expected, config);
+      });
+
+      it('should set the Content-Length request header to 6', async () => {
+        const expected = [
+          action => {
+            expect(action).to.have.property('headers');
+            expect(action).to.satisfy(a => a.headers.get('Content-Length') === 6);
+          },
+          null,
+          null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => {
+            expect(opts).to.have.property('headers');
+            expect(opts).to.satisfy(o => o.headers.get('Content-Length') === 6);
+          }),
+        });
+
+        await test(action, expected, config);
+      });
+
+    });
+
+  });
+
   describe('opts', () => {
     const action = new FetchAction(PREFIX).opts({ custom: 42, foo: 'bar' });
 
