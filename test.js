@@ -10,6 +10,13 @@ const BASE_CONFIG = {
   baseUrl: 'http://localhost:' + PORT,
 };
 
+const wrapFetch = f => (url, opts) => {
+  f(url, opts);
+  return fetch(url, opts);
+}
+
+const makeConfig = config => Object.assign({}, BASE_CONFIG, config);
+
 const test = async (action, expected, config = BASE_CONFIG) => {
   const fetchMiddleware = createFetchMiddleware(config);
 
@@ -101,10 +108,52 @@ describe('redux-fetch', () => {
       const action = new FetchAction(PREFIX)
         .get('/walala');
 
+      const expected = [null, null, null];
+
+      const config = makeConfig({
+        fetch: wrapFetch((url, opts) => expect(url).to.match(/\/walala/)),
+      });
+
+      await test(action, expected, config);
+    });
+
+    it('should dispatch a request action with the correct url', async () => {
+      const action = new FetchAction(PREFIX)
+        .get('/walala');
+
       const expected = [
         action => {
           expect(action).to.have.property('url');
           expect(action.url).to.match(/\/walala$/);
+        },
+        null,
+        null,
+      ];
+
+      await test(action, expected);
+    });
+
+    it('should call fetch with a correct query string', async () => {
+      const action = new FetchAction(PREFIX)
+        .get('/', { foo: 'bar', baz: 42 });
+
+      const expected = [ null, null, null ];
+
+      const config = makeConfig({
+        fetch: wrapFetch((url, opts) => expect(url).to.match(/\/?foo=bar&baz=42/)),
+      });
+
+      await test(action, expected, config);
+    });
+
+    it('should dispatch a request action with a correct query string', async () => {
+      const action = new FetchAction(PREFIX)
+        .get('/', { foo: 'bar', baz: 42 });
+
+      const expected = [
+        action => {
+          expect(action).to.have.property('url');
+          expect(action.url).to.match(/\/?foo=bar&baz=42$/);
         },
         null,
         null,

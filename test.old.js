@@ -417,7 +417,6 @@ const test_callbacks = async () => {
 withServer(async () => {
   try {
     await Promise.all([
-      test_url(),
       test_opts(),
       test_expect(),
       test_contentType(),
