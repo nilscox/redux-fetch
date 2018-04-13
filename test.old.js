@@ -69,51 +69,6 @@ const test = async (config, action, expected) => {
   return result;
 };
 
-const test_expect = async () => {
-  const expectSuccess = [
-    null,
-    action => assert.strictEqual(action.type, 'HELLO_SUCCESS'),
-    null,
-  ];
-
-  const expectFailure = [
-    null,
-    action => assert.strictEqual(action.type, 'HELLO_FAILURE'),
-    null,
-  ];
-
-  const expect = [{
-    action: new FetchAction('HELLO'),
-    expected: expectSuccess,
-  }, {
-    action: new FetchAction('HELLO').get('/401'),
-    expected: expectFailure,
-  }, {
-    action: new FetchAction('HELLO').expect(200),
-    expected: expectSuccess,
-  }, {
-    action: new FetchAction('HELLO').get('/400').expect(400),
-    expected: expectSuccess,
-  }, {
-    action: new FetchAction('HELLO').expect([200, 201]),
-    expected: expectSuccess,
-  }, {
-    action: new FetchAction('HELLO').get('/404').expect(200),
-    expected: expectFailure,
-  }, {
-    action: new FetchAction('HELLO').expect(404),
-    expected: expectFailure,
-  }, {
-    action: new FetchAction('HELLO').get('/300').expect([200, 300, 400]),
-    expected: expectSuccess,
-  }, {
-    action: new FetchAction('HELLO').get('/500').expect([200, 300, 400]),
-    expected: expectFailure,
-  }];
-
-  await Promise.all(expect.map(o => test(baseConfig, o.action, o.expected)));
-};
-
 const test_contentType = async () => {
   const test_contentType_json = async () => {
     const action = new FetchAction('HELLO').get('/200/json');
@@ -404,8 +359,6 @@ const test_callbacks = async () => {
 withServer(async () => {
   try {
     await Promise.all([
-      test_opts(),
-      test_expect(),
       test_contentType(),
       test_callbacks(),
     ]);

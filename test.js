@@ -198,4 +198,79 @@ describe('redux-fetch', () => {
 
   });
 
+  describe('expect', () => {
+    const expectSuccess = [
+      null,
+      action => expect(action.type).to.match(/_SUCCESS$/),
+      null
+    ];
+
+    const expectFailure = [
+      null,
+      action => expect(action.type).to.match(/_FAILURE$/),
+      null
+    ];
+
+    describe('no expected value', () => {
+
+      it('should dispatch a success action when the response status is 200 and no expected value is set', async () => {
+        await test(new FetchAction(PREFIX), expectSuccess);
+      });
+
+      it('should dispatch a success action when the response status is 201 and no expected value is set', async () => {
+        await test(new FetchAction(PREFIX).get('/201'), expectSuccess);
+      });
+
+      it('should dispatch a failure action when the response status is 400 and no expected value is set', async () => {
+        await test(new FetchAction(PREFIX).get('/400'), expectFailure);
+      });
+
+    });
+
+    describe('single expected value', () => {
+
+      it('should dispatch a success action when the response status is 200 and expected value is 200', async () => {
+        await test(new FetchAction(PREFIX).expect(200), expectSuccess);
+      });
+
+      it('should dispatch a success action when the response status is 400 and expected value is 400', async () => {
+        await test(new FetchAction(PREFIX).get('/400').expect(400), expectSuccess);
+      });
+
+      it('should dispatch a failure action when the response status is 200 and expected value is 400', async () => {
+        await test(new FetchAction(PREFIX).expect(400), expectFailure);
+      });
+
+      it('should dispatch a failure action when the response status is 400 and expected value is 200', async () => {
+        await test(new FetchAction(PREFIX).get('/400').expect(200), expectFailure);
+      });
+
+    });
+
+    describe('multiple expected values', () => {
+
+      it('should dispatch a success action when the response status is 200 and expected value is within [200, 400]', async () => {
+        await test(new FetchAction(PREFIX).expect([200, 400]), expectSuccess);
+      });
+
+      it('should dispatch a success action when the response status is 200 and expected value is within [400, 200]', async () => {
+        await test(new FetchAction(PREFIX).expect([400, 200]), expectSuccess);
+      });
+
+      it('should dispatch a failure action when the response status is 300 and expected value is within [200, 400]', async () => {
+        await test(new FetchAction(PREFIX).get('/300').expect([200, 400]), expectFailure);
+      });
+
+      it('should dispatch a failure action when the response status is 418 and expected value is within [200, 300, 400]', async () => {
+        await test(new FetchAction(PREFIX).get('/418').expect([200, 300, 400]), expectFailure);
+      });
+
+      it('should dispatch a success action when the response status is 418 and expected value is within [200, 300, 418, 400]', async () => {
+        await test(new FetchAction(PREFIX).get('/418').expect([200, 300, 418, 400]), expectSuccess);
+      });
+
+    });
+
+  });
+
 });
