@@ -72,15 +72,15 @@ class FetchAction {
   }
 
   header(key, value) {
+    key = key.toLowerCase();
+
     if (!this._opts.headers)
-      this._opts.headers = new Headers();
+      this._opts.headers = {};
 
     if (!value)
-      this._opts.headers.delete(key);
-    else if (this._opts.headers.has(key))
-      this._opts.headers.set(key, value);
+      delete this._opts.headers[key];
     else
-      this._opts.headers.append(key, value);
+      this._opts.headers[key] = value;
 
     return this;
   }

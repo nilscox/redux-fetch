@@ -105,10 +105,29 @@ describe('redux-fetch', () => {
 
   describe('headers', () => {
     const actions = {
-      noHeaders: new FetchAction(PREFIX),
+      noHeader: new FetchAction(PREFIX),
       singleHeader: new FetchAction(PREFIX).header('Foo', 'bar'),
       multipleHeaders: new FetchAction(PREFIX).header('Foo', 'bar').header('Baz', 42),
       overrideHeader: new FetchAction(PREFIX).header('Foo', 'bar').header('Foo', 42),
+    };
+
+    const expectActions = {
+      noHeader: [
+        action => expect(action).to.not.have.property('headers'),
+        null, null,
+      ],
+      singleHeader: [
+        action => expect(action).to.have.deep.property('headers', { foo: 'bar' }),
+        null, null,
+      ],
+      multipleHeaders: [
+        action => expect(action).to.have.deep.property('headers', { foo: 'bar', baz: 42 }),
+        null, null,
+      ],
+      overrideHeader: [
+        action => expect(action).to.have.deep.property('headers', { foo: 42 }),
+        null, null,
+      ],
     };
 
     const expectConfig = {
@@ -116,40 +135,30 @@ describe('redux-fetch', () => {
         fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('headers')),
       }),
       singleHeader: makeConfig({
-        fetch: wrapFetch((url, opts) => {
-          expect(opts).to.have.property('headers');
-          expect(opts).to.satisfy(a => a.headers.get('Foo') === 'bar');
-        }),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.deep.property('headers', { foo: 'bar' })),
       }),
       multipleHeaders: makeConfig({
-        fetch: wrapFetch((url, opts) => {
-          expect(opts).to.have.property('headers');
-          expect(opts).to.satisfy(a => a.headers.get('Foo') === 'bar');
-          expect(opts).to.satisfy(a => a.headers.get('Baz') === 42);
-        }),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.deep.property('headers', { foo: 'bar', baz: 42 })),
       }),
       overrideHeader: makeConfig({
-        fetch: wrapFetch((url, opts) => {
-          expect(opts).to.have.property('headers');
-          expect(opts).to.satisfy(a => a.headers.get('Foo') === 42);
-        }),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.deep.property('headers', { foo: 42 })),
       }),
     };
 
     it('should call fetch no custom headers', async () => {
-      await test(actions.noHeaders, NULL3, expectConfig.noHeaders);
+      await test(actions.noHeader, expectActions.noHeader, expectConfig.noHeaders);
     });
 
     it('should call fetch with a single custom header', async () => {
-      await test(actions.singleHeader, NULL3, expectConfig.singleHeader);
+      await test(actions.singleHeader, expectActions.singleHeader, expectConfig.singleHeader);
     });
 
     it('should call fetch with multiple custom headers', async () => {
-      await test(actions.multipleHeaders, NULL3, expectConfig.multipleHeaders);
+      await test(actions.multipleHeaders, expectActions.multipleHeaders, expectConfig.multipleHeaders);
     });
 
     it('should call fetch with custom header override', async () => {
-      await test(actions.overrideHeader, NULL3, expectConfig.overrideHeader);
+      await test(actions.overrideHeader, expectActions.overrideHeader, expectConfig.overrideHeader);
     });
 
   });
@@ -173,8 +182,7 @@ describe('redux-fetch', () => {
             expect(action).to.have.property('url');
             expect(action.url).to.match(/\/walala$/);
           },
-          null,
-          null,
+          null, null,
         ];
 
         await test(action, expected);
@@ -209,8 +217,7 @@ describe('redux-fetch', () => {
             expect(action).to.have.property('url');
             expect(action.url).to.match(/\/?foo=bar&baz=42$/);
           },
-          null,
-          null,
+          null, null,
         ];
 
         await test(action, expected);
@@ -228,8 +235,7 @@ describe('redux-fetch', () => {
       it('should set the request body to "coucou"', async () => {
         const expected = [
           action => expect(action).to.have.property('body', 'coucou'),
-          null,
-          null,
+          null, null,
         ];
 
         const config = makeConfig({
@@ -241,19 +247,12 @@ describe('redux-fetch', () => {
 
       it('should set the Content-Type request header to text/plain', async () => {
         const expected = [
-          action => {
-            expect(action).to.have.property('headers');
-            expect(action).to.satisfy(a => a.headers.get('Content-Type') === 'text/plain');
-          },
-          null,
-          null,
+          action => expect(action).to.have.nested.property('headers.content-type', 'text/plain'),
+          null, null,
         ];
 
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => {
-            expect(opts).to.have.property('headers');
-            expect(opts).to.satisfy(o => o.headers.get('Content-Type') === 'text/plain');
-          }),
+          fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-type', 'text/plain')),
         });
 
         await test(action, expected, config);
@@ -261,19 +260,12 @@ describe('redux-fetch', () => {
 
       it('should set the Content-Length request header to 6', async () => {
         const expected = [
-          action => {
-            expect(action).to.have.property('headers');
-            expect(action).to.satisfy(a => a.headers.get('Content-Length') === 6);
-          },
-          null,
-          null,
+          action => expect(action).to.have.nested.property('headers.content-length', 6),
+          null, null,
         ];
 
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => {
-            expect(opts).to.have.property('headers');
-            expect(opts).to.satisfy(o => o.headers.get('Content-Length') === 6);
-          }),
+          fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-length', 6)),
         });
 
         await test(action, expected, config);
@@ -287,8 +279,7 @@ describe('redux-fetch', () => {
       it('should set the request body to {"toto":"tata"}', async () => {
         const expected = [
           action => expect(action).to.have.property('body', '{"toto":"tata"}'),
-          null,
-          null,
+          null, null,
         ];
 
         const config = makeConfig({
@@ -300,19 +291,12 @@ describe('redux-fetch', () => {
 
       it('should set the Content-Type request header to application/json', async () => {
         const expected = [
-          action => {
-            expect(action).to.have.property('headers');
-            expect(action).to.satisfy(a => a.headers.get('Content-Type') === 'application/json');
-          },
-          null,
-          null,
+          action => expect(action).to.have.nested.property('headers.content-type', 'application/json'),
+          null, null,
         ];
 
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => {
-            expect(opts).to.have.property('headers');
-            expect(opts).to.satisfy(o => o.headers.get('Content-Type') === 'application/json');
-          }),
+          fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-type', 'application/json')),
         });
 
         await test(action, expected, config);
@@ -320,19 +304,12 @@ describe('redux-fetch', () => {
 
       it('should set the Content-Length request header to 15', async () => {
         const expected = [
-          action => {
-            expect(action).to.have.property('headers');
-            expect(action).to.satisfy(a => a.headers.get('Content-Length') === 15);
-          },
-          null,
-          null,
+          action => expect(action).to.have.nested.property('headers.content-length', 15),
+          null, null,
         ];
 
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => {
-            expect(opts).to.have.property('headers');
-            expect(opts).to.satisfy(o => o.headers.get('Content-Length') === 15);
-          }),
+          fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-length', 15)),
         });
 
         await test(action, expected, config);
