@@ -333,7 +333,7 @@ describe('redux-fetch', () => {
         await test(action, expected, config);
       });
 
-      it('should set the Content-Type request header to application/json', async () => {
+      it('should not include a Content-Type header in the request', async () => {
         const expected = [
           action => expect(action).to.not.have.nested.property('headers.content-type'),
           null, null,
@@ -346,7 +346,7 @@ describe('redux-fetch', () => {
         await test(action, expected, config);
       });
 
-      it('should set the Content-Length request header to 15', async () => {
+      it('should not include a Content-Length header in the request', async () => {
         const expected = [
           action => expect(action).to.not.have.nested.property('headers.content-length'),
           null, null,
@@ -377,7 +377,7 @@ describe('redux-fetch', () => {
         await test(action, expected, config);
       });
 
-      it('should set the Content-Type request header to application/json', async () => {
+      it('should not include a Content-Type header in the request', async () => {
         const expected = [
           action => expect(action).to.not.have.nested.property('headers.content-type'),
           null, null,
@@ -390,7 +390,7 @@ describe('redux-fetch', () => {
         await test(action, expected, config);
       });
 
-      it('should set the Content-Length request header to 15', async () => {
+      it('should not include a Content-Length header in the request', async () => {
         const expected = [
           action => expect(action).to.not.have.nested.property('headers.content-length'),
           null, null,
@@ -398,6 +398,19 @@ describe('redux-fetch', () => {
 
         const config = makeConfig({
           fetch: wrapFetch((url, opts) => expect(opts).to.not.have.nested.property('headers.content-length')),
+        });
+
+        await test(action, expected, config);
+      });
+
+      it('should not include a header property at all in the request', async () => {
+        const expected = [
+          action => expect(action).to.not.have.property('headers'),
+          null, null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('headers')),
         });
 
         await test(action, expected, config);
