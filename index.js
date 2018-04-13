@@ -1,5 +1,17 @@
 const isomorphicFetch = require('isomorphic-fetch');
 
+const HTTP_METHODS = [
+  'OPTIONS',
+  'GET',
+  'HEAD',
+  'POST',
+  'PUT',
+  'DELETE',
+  'TRACE',
+  'CONNECT',
+  'PATCH',
+];
+
 class FetchAction {
   static buildQueryString(params) {
     if (!params)
@@ -29,14 +41,7 @@ class FetchAction {
     this._onFailure = null;
     this._onFinish = null;
 
-    [
-      'GET',
-      'POST',
-      'PUT',
-      'PATCH',
-      'DELETE',
-      'OPTIONS',
-    ].forEach(method => {
+    HTTP_METHODS.forEach(method => {
       this[method.toLowerCase()] = (route, params) => {
         this._route = route + FetchAction.buildQueryString(params);
         this._opts.method = method;
