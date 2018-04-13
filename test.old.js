@@ -69,19 +69,6 @@ const test = async (config, action, expected) => {
   return result;
 };
 
-const test_opts = async () => {
-  const action = new FetchAction('HELLO').opts({ custom: 42 });
-  const expected = [
-    action => {
-      assert.ok(action.custom);
-      assert.strictEqual(action.custom, 42);
-    },
-    null, null,
-  ];
-
-  await test(baseConfig, action, expected);
-};
-
 const test_expect = async () => {
   const expectSuccess = [
     null,

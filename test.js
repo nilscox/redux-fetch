@@ -5,6 +5,7 @@ const { createFetchMiddleware, FetchAction } = require('.');
 
 const PORT = 7537;
 const PREFIX = 'HELLO';
+const NULL3 = [null, null, null];
 
 const BASE_CONFIG = {
   baseUrl: 'http://localhost:' + PORT,
@@ -104,59 +105,92 @@ describe('redux-fetch', () => {
 
   describe('url', () => {
 
-    it('should call fetch with the correct url', async () => {
-      const action = new FetchAction(PREFIX)
-        .get('/walala');
+    describe('route', () => {
+      const action = new FetchAction(PREFIX).get('/walala');
 
-      const expected = [null, null, null];
+      it('should call fetch with the correct url', async () => {
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(url).to.match(/\/walala$/)),
+        });
 
-      const config = makeConfig({
-        fetch: wrapFetch((url, opts) => expect(url).to.match(/\/walala/)),
+        await test(action, NULL3, config);
       });
 
-      await test(action, expected, config);
-    });
+      it('should dispatch a request action with the correct url', async () => {
+        const expected = [
+          action => {
+            expect(action).to.have.property('url');
+            expect(action.url).to.match(/\/walala$/);
+          },
+          null,
+          null,
+        ];
 
-    it('should dispatch a request action with the correct url', async () => {
-      const action = new FetchAction(PREFIX)
-        .get('/walala');
-
-      const expected = [
-        action => {
-          expect(action).to.have.property('url');
-          expect(action.url).to.match(/\/walala$/);
-        },
-        null,
-        null,
-      ];
-
-      await test(action, expected);
-    });
-
-    it('should call fetch with a correct query string', async () => {
-      const action = new FetchAction(PREFIX)
-        .get('/', { foo: 'bar', baz: 42 });
-
-      const expected = [ null, null, null ];
-
-      const config = makeConfig({
-        fetch: wrapFetch((url, opts) => expect(url).to.match(/\/?foo=bar&baz=42/)),
+        await test(action, expected);
       });
 
-      await test(action, expected, config);
     });
 
-    it('should dispatch a request action with a correct query string', async () => {
-      const action = new FetchAction(PREFIX)
-        .get('/', { foo: 'bar', baz: 42 });
+    describe('query string', () => {
+      const action = new FetchAction(PREFIX).get('/', { foo: 'bar', baz: 42 });
 
+      it('should call fetch with an empty query string', async () => {
+        const action = new FetchAction(PREFIX).get('/', {});
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(url).to.match(/\/$/)),
+        });
+
+        await test(action, NULL3, config);
+      });
+
+      it('should call fetch with a correct query string', async () => {
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(url).to.match(/\/?foo=bar&baz=42$/)),
+        });
+
+        await test(action, NULL3, config);
+      });
+
+      it('should dispatch a request action with a correct query string', async () => {
+        const expected = [
+          action => {
+            expect(action).to.have.property('url');
+            expect(action.url).to.match(/\/?foo=bar&baz=42$/);
+          },
+          null,
+          null,
+        ];
+
+        await test(action, expected);
+      });
+
+    });
+
+  });
+
+  describe('opts', () => {
+    const action = new FetchAction(PREFIX).opts({ custom: 42, foo: 'bar' });
+
+    it('should call fetch with custom options', async () => {
+      const config = makeConfig({
+        fetch: wrapFetch((url, opts) => {
+          expect(opts).to.have.property('custom', 42);
+          expect(opts).to.have.property('foo', 'bar');
+        }),
+      });
+
+      await test(action, NULL3, config);
+    });
+
+    it('should dispatch a request action with custom options', async () => {
       const expected = [
         action => {
-          expect(action).to.have.property('url');
-          expect(action.url).to.match(/\/?foo=bar&baz=42$/);
+          expect(action).to.have.property('custom', 42);
+          expect(action).to.have.property('foo', 'bar');
         },
         null,
-        null,
+        null
       ];
 
       await test(action, expected);
