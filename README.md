@@ -181,14 +181,22 @@ The route is appened to the base url given to the middleware configuration, if a
 
 #### body(obj)
 
-Set the body that will be sent as the request payload. If `obj` is an objet, it will be stringified and the request's `Content-Type` header will be
-set to `application/json`. In other cases, the request's `Content-Type` will be set to `text/plain`.
+Set the body that will be sent as the request payload. `obj` can be either falsy, a string, or an object.
 
-> Maybe something smarter can be done here, let me know if you think of anything else.
+If `obj` is a string, the `Content-Type` header will be set to `text/plain`.
+If `obj` is an object, the `Content-Type` header will be set to `application/json`.
+
+In both cases, the `Content-Length` header will also be set to the length of the request payload.
+
+If `obj` is null, the body will be unset, as well with the `Content-Type` and `Content-Length` headers.
 
 #### header(key, value)
 
-Set a HTTP header field that will be sent with the request. This can be used to override the `Content-Type` set by a call to [body](#bodyobj).
+Set a HTTP header field that will be sent with the request.
+
+If value is null, the header will be unset.
+
+> This can be used to override the `Content-Type` set by a call to [body] #bodyobj).
 
 #### opts(obj)
 

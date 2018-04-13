@@ -47,22 +47,40 @@ class FetchAction {
   }
 
   body(body) {
+    if (!body) {
+      delete this._opts.body;
+
+      this.header('Content-Type', null);
+      this.header('Content-Length', null);
+
+      return this;
+    }
+
     if (typeof body === 'object') {
       this.header('Content-Type', 'application/json');
       this._opts.body = JSON.stringify(body);
-    } else {
+    } else if (typeof body === 'string') {
       this.header('Content-Type', 'text/plain');
       this._opts.body = body;
+    } else {
+      throw new Error('invalid body type: ', typeof body);
     }
+
+    this.header('Content-Length', this._opts.body.length);
 
     return this;
   }
 
   header(key, value) {
     if (!this._opts.headers)
-      this._opts.headers = {};
+      this._opts.headers = new Headers();
 
-    this._opts.headers[key] = value;
+    if (!value)
+      this._opts.headers.delete(key);
+    else if (this._opts.headers.has(key))
+      this._opts.headers.set(key, value);
+    else
+      this._opts.headers.append(key, value);
 
     return this;
   }
