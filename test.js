@@ -161,6 +161,21 @@ describe('redux-fetch', () => {
       await test(actions.overrideHeader, expectActions.overrideHeader, expectConfig.overrideHeader);
     });
 
+    it('should delete the headers option when the last entry is unset', async () => {
+      const action = new FetchAction(PREFIX).header('Foo', 'bar').header('Foo', null);
+
+      const expected = [
+        action => expect(action).to.not.have.property('headers'),
+        null, null,
+      ];
+
+      const config = makeConfig({
+        fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('headers')),
+      });
+
+      await test(action, expected, config);
+    });
+
   });
 
   describe('url', () => {
@@ -310,6 +325,21 @@ describe('redux-fetch', () => {
 
         const config = makeConfig({
           fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-length', 15)),
+        });
+
+        await test(action, expected, config);
+      });
+
+      it('should override the Content-Type request header', async () => {
+        const action = new FetchAction(PREFIX).body({ toto: 'tata' }).header('Content-Type', 'text/plain');
+
+        const expected = [
+          action => expect(action).to.have.nested.property('headers.content-type', 'text/plain'),
+          null, null,
+        ];
+
+        const config = makeConfig({
+          fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-type', 'text/plain')),
         });
 
         await test(action, expected, config);
