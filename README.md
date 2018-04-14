@@ -1,5 +1,7 @@
 # redux-fetch
 
+[![Build Status](https://travis-ci.org/nilscox/redux-fetch.svg?branch=master)](https://travis-ci.org/nilscox/redux-fetch)
+
 Yet another [redux middleware](https://redux.js.org/docs/advanced/Middleware.html) to perform HTTP requests.
 
 ## Introduction
