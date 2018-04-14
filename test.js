@@ -1,3 +1,6 @@
+/* eslint-disable padded-blocks */
+/* eslint max-len: ["error", { "code": 120 }] */
+
 const http = require('http');
 const expect = require('chai').expect;
 const { createStore, applyMiddleware } = require('redux');
@@ -8,13 +11,13 @@ const PREFIX = 'HELLO';
 const NULL3 = [null, null, null];
 
 const BASE_CONFIG = {
-  baseUrl: 'http://localhost:' + PORT,
+  baseUrl: `http://localhost:${PORT}`,
 };
 
 const wrapFetch = f => (url, opts) => {
   f(url, opts);
   return fetch(url, opts);
-}
+};
 
 const makeConfig = config => Object.assign({}, BASE_CONFIG, config);
 
@@ -43,8 +46,8 @@ const test = async (action, expected, config = BASE_CONFIG) => {
 const createServer = () => {
   return http.createServer((req, res) => {
     const match = req.url.match(/\/([0-9]{3})(\/(text|json))?\/?/);
-    const status = match && ~~match[1] || 200;
-    const contentType = match && match[3] || null;
+    const status = (match && ~~match[1]) || 200;
+    const contentType = (match && match[3]) || null;
     const headers = {};
     let body = null;
 
@@ -68,7 +71,7 @@ const createServer = () => {
 
     res.end();
   });
-}
+};
 
 describe('redux-fetch', () => {
 
@@ -93,9 +96,9 @@ describe('redux-fetch', () => {
       const action = new FetchAction(PREFIX);
 
       const expected = [
-        action => expect(action).to.have.property('type', PREFIX + '_REQUEST'),
-        action => expect(action).to.have.property('type', PREFIX + '_SUCCESS'),
-        action => expect(action).to.have.property('type', PREFIX + '_FINISH'),
+        action => expect(action).to.have.property('type', `${PREFIX}_REQUEST`),
+        action => expect(action).to.have.property('type', `${PREFIX}_SUCCESS`),
+        action => expect(action).to.have.property('type', `${PREFIX}_FINISH`),
       ];
 
       await test(action, expected);
@@ -185,7 +188,7 @@ describe('redux-fetch', () => {
 
       it('should call fetch with the correct url', async () => {
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => expect(url).to.match(/\/walala$/)),
+          fetch: wrapFetch(url => expect(url).to.match(/\/walala$/)),
         });
 
         await test(action, NULL3, config);
@@ -212,7 +215,7 @@ describe('redux-fetch', () => {
         const action = new FetchAction(PREFIX).get('/', {});
 
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => expect(url).to.match(/\/$/)),
+          fetch: wrapFetch(url => expect(url).to.match(/\/$/)),
         });
 
         await test(action, NULL3, config);
@@ -220,7 +223,7 @@ describe('redux-fetch', () => {
 
       it('should call fetch with a correct query string', async () => {
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => expect(url).to.match(/\/?foo=bar&baz=42$/)),
+          fetch: wrapFetch(url => expect(url).to.match(/\/?foo=bar&baz=42$/)),
         });
 
         await test(action, NULL3, config);
@@ -311,7 +314,9 @@ describe('redux-fetch', () => {
         ];
 
         const config = makeConfig({
-          fetch: wrapFetch((url, opts) => expect(opts).to.have.nested.property('headers.content-type', 'application/json')),
+          fetch: wrapFetch((url, opts) => {
+            expect(opts).to.have.nested.property('headers.content-type', 'application/json');
+          }),
         });
 
         await test(action, expected, config);
@@ -478,8 +483,7 @@ describe('redux-fetch', () => {
           expect(action).to.have.property('custom', 42);
           expect(action).to.have.property('foo', 'bar');
         },
-        null,
-        null
+        null, null,
       ];
 
       await test(action, expected);
@@ -491,13 +495,13 @@ describe('redux-fetch', () => {
     const expectSuccess = [
       null,
       action => expect(action.type).to.match(/_SUCCESS$/),
-      null
+      null,
     ];
 
     const expectFailure = [
       null,
       action => expect(action.type).to.match(/_FAILURE$/),
-      null
+      null,
     ];
 
     describe('no expected value', () => {
@@ -538,22 +542,27 @@ describe('redux-fetch', () => {
 
     describe('multiple expected values', () => {
 
+      /* eslint-disable-next-line max-len */
       it('should dispatch a success action when the response status is 200 and expected value is within [200, 400]', async () => {
         await test(new FetchAction(PREFIX).expect([200, 400]), expectSuccess);
       });
 
+      /* eslint-disable-next-line max-len */
       it('should dispatch a success action when the response status is 200 and expected value is within [400, 200]', async () => {
         await test(new FetchAction(PREFIX).expect([400, 200]), expectSuccess);
       });
 
+      /* eslint-disable-next-line max-len */
       it('should dispatch a failure action when the response status is 300 and expected value is within [200, 400]', async () => {
         await test(new FetchAction(PREFIX).get('/300').expect([200, 400]), expectFailure);
       });
 
+      /* eslint-disable-next-line max-len */
       it('should dispatch a failure action when the response status is 418 and expected value is within [200, 300, 400]', async () => {
         await test(new FetchAction(PREFIX).get('/418').expect([200, 300, 400]), expectFailure);
       });
 
+      /* eslint-disable-next-line max-len */
       it('should dispatch a success action when the response status is 418 and expected value is within [200, 300, 418, 400]', async () => {
         await test(new FetchAction(PREFIX).get('/418').expect([200, 300, 418, 400]), expectSuccess);
       });

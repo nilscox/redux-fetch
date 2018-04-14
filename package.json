@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "lint": "eslint .",
     "test": "nyc --reporter=text mocha --timeout=1000"
   },
   "dependencies": {

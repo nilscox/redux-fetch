@@ -22,6 +22,7 @@ class FetchAction {
     if (keys.length === 0)
       return '';
 
+    // eslint-disable-next-line prefer-template
     return '?' + keys.map(key => key + '=' + params[key]).join('&');
   }
 
@@ -76,8 +77,8 @@ class FetchAction {
     return this;
   }
 
-  header(key, value) {
-    key = key.toLowerCase();
+  header(key_, value) {
+    const key = key_.toLowerCase();
 
     if (!this._opts.headers)
       this._opts.headers = {};
@@ -87,8 +88,7 @@ class FetchAction {
 
       if (Object.keys(this._opts.headers).length === 0)
         delete this._opts.headers;
-    }
-    else {
+    } else {
       this._opts.headers[key] = value;
     }
 
@@ -101,11 +101,7 @@ class FetchAction {
   }
 
   expect(values) {
-    if (!Array.isArray(values))
-      values = [values];
-
-    this._expect = values;
-
+    this._expect = Array.isArray(values) ? values : [values];
     return this;
   }
 
@@ -130,23 +126,21 @@ class FetchAction {
   }
 }
 
-const fetchMiddleware = opts => store => next => action => {
+const fetchMiddleware = config => store => next => action => {
   if (!(action instanceof FetchAction))
     return next(action);
 
-  const baseUrl = opts.baseUrl;
-  const fetch = opts.fetch;
-  const suffixes = opts.suffixes;
+  const { baseUrl, fetch, suffixes } = config;
 
   const prefix = action._prefix;
   const route = action._route;
   const fetchOpts = action._opts;
   const expect = action._expect;
 
-  const onRequest = action._onRequest || opts.onRequest;
-  const onSuccess = action._onSuccess || opts.onSuccess;
-  const onFailure = action._onFailure || opts.onFailure;
-  const onFinish = action._onFinish || opts.onFinish;
+  const onRequest = action._onRequest || config.onRequest;
+  const onSuccess = action._onSuccess || config.onSuccess;
+  const onFailure = action._onFailure || config.onFailure;
+  const onFinish = action._onFinish || config.onFinish;
 
   const url = baseUrl + route;
 
@@ -162,24 +156,24 @@ const fetchMiddleware = opts => store => next => action => {
     return fetch(url, fetchOpts)
       .then(r => res = r)
       .then(() => duration = new Date() - startDate);
-  }
-
-  const parseBody = () => {
-    return Promise.resolve()
-      .then(() => {
-        const contentType = res.headers.get('Content-Type');
-
-        if (/^application\/json/.exec(contentType))
-          return res.json();
-        else if (/^text\//.exec(contentType))
-          return res.text();
-      })
-      .then(b => body = b);
   };
+
+  const parseBody = () => Promise.resolve()
+    .then(() => {
+      const contentType = res.headers.get('Content-Type');
+
+      if (/^application\/json/.exec(contentType))
+        return res.json();
+      else if (/^text\//.exec(contentType))
+        return res.text();
+
+      return null;
+    })
+    .then(b => body = b);
 
   const dispatchRequest = () => {
     const contentType = fetchOpts.headers && fetchOpts.headers['Content-Type'];
-    let body = fetchOpts.body;
+    let { body } = fetchOpts;
 
     if (contentType && contentType.match(/^application\/json/)) {
       try {
@@ -238,11 +232,7 @@ const defaultConfig = {
   },
 };
 
-const createMiddleware = config => {
-  config = Object.assign({}, defaultConfig, config);
-
-  return fetchMiddleware(config);
-};
+const createMiddleware = config => fetchMiddleware(Object.assign({}, defaultConfig, config));
 
 const createFetchActionTypes = prefix => ({
   REQUEST: prefix + defaultConfig.suffixes.request,
