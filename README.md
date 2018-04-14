@@ -164,6 +164,7 @@ the `FetchAction` class returns `this` in order to be chained, like real js deve
 
 Here is a list of all the methods that can be called to configure a `FetchAction`:
 
+- [baseUrl](#baseurlurl)
 - [HTTP_METHOD(route)](#http_methodroute)
 - [body(obj)](#bodyobj)
 - [header(key, value)](#headerkey-value)
@@ -173,6 +174,10 @@ Here is a list of all the methods that can be called to configure a `FetchAction
 - [onSuccess(callback)](#onsuccesscallback)
 - [onFailure(callback)](#onfailurecallback)
 - [onFinish(callback)](#onfinishcallback)
+
+#### baseUrl(url)
+
+Override the baseUrl from the configuration.
 
 #### HTTP_METHOD(route)
 

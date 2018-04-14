@@ -106,6 +106,40 @@ describe('redux-fetch', () => {
 
   });
 
+  describe('baseUrl', () => {
+
+    it('should set the baseUrl from the configuration', async () => {
+      const action = new FetchAction(PREFIX);
+
+      const expected = [
+        action => expect(action).to.have.property('url', `http://localhost:${PORT}/`),
+        null, null,
+      ];
+
+      const config = {
+        baseUrl: `http://localhost:${PORT}`,
+      };
+
+      await test(action, expected, config);
+    });
+
+    it('should override the baseUrl in the action', async () => {
+      const action = new FetchAction(PREFIX).baseUrl(`http://localhost:${PORT}`);
+
+      const expected = [
+        action => expect(action).to.have.property('url', `http://localhost:${PORT}/`),
+        null, null,
+      ];
+
+      const config = {
+        baseUrl: 'http://lokalroost',
+      };
+
+      await test(action, expected, config);
+    });
+
+  });
+
   describe('headers', () => {
     const actions = {
       noHeader: new FetchAction(PREFIX),

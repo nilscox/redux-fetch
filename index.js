@@ -32,6 +32,7 @@ class FetchAction {
 
     this._prefix = prefix;
 
+    this._baseUrl = null;
     this._route = '/';
     this._opts = {};
 
@@ -50,6 +51,11 @@ class FetchAction {
         return this;
       };
     });
+  }
+
+  baseUrl(url) {
+    this._baseUrl = url;
+    return this;
   }
 
   body(body) {
@@ -168,13 +174,14 @@ const fetchMiddleware = config => store => next => action => {
   const route = action._route;
   const fetchOpts = action._opts;
   const expect = action._expect;
+  const actionBaseUrl = action._baseUrl;
+
+  const url = (actionBaseUrl || baseUrl) + route;
 
   const onRequest = action._onRequest || config.onRequest;
   const onSuccess = action._onSuccess || config.onSuccess;
   const onFailure = action._onFailure || config.onFailure;
   const onFinish = action._onFinish || config.onFinish;
-
-  const url = baseUrl + route;
 
   let res = null;
   let body = null;
