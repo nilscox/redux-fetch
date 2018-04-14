@@ -34,7 +34,7 @@ yarn add nilscox/redux-fetch
 ```js
 import { createStore, applyMiddleware } from 'redux';
 import { createFetchMiddleware, FetchAction } from 'redux-fetch';
-import reducer from 'somewhere';
+import { reducer, connectToWebsocket } from 'somewhere';
 
 const fetchMiddleware = createFetchMiddleware({
   baseUrl: 'http://some.api',
@@ -44,7 +44,9 @@ const store = createStore(reducer, applyMiddleware(fetchMiddleware));
 
 const action = new FetchAction('USER_LOGIN')
   .post('/user/login')
-  .body({ email: 'im@not.evil', password: 'TRU$T_M3' });
+  .body({ email: 'im@not.evil', password: 'TRU$T_M3' })
+  .header('Custom-Header', 'some-value')
+  .expect([200, 401]);
 
 store.dispatch(action);
 ```
@@ -58,6 +60,8 @@ Assuming the call to `http://some.api/user/login` with the provided credentials 
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'Content-Length': 45,
+    'Custom-Header': 'some-value',
   },
   body: {
     email: 'im@not.evil',
