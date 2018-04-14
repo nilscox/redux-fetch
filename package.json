@@ -1,8 +1,25 @@
 {
   "name": "redux-fetch",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.0.0",
+  "description": "Fetch integration for Redux",
   "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nilscox/redux-fetch.git"
+  },
+  "keywords": [
+    "redux",
+    "fetch",
+    "http",
+    "middleware",
+    "api"
+  ],
+  "author": "Nils Cox <nils@epita.fr>",
+  "bugs": {
+    "url": "https://github.com/nilscox/redux-fetch/issues"
+  },
+  "homepage": "https://github.com/nilscox/redux-fetch",
   "scripts": {
     "lint": "eslint .",
     "test": "nyc --reporter=text mocha --timeout=1000"
