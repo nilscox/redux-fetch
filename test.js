@@ -296,7 +296,7 @@ describe('redux-fetch', () => {
 
       it('should set the request body to {"toto":"tata"}', async () => {
         const expected = [
-          action => expect(action).to.have.property('body', '{"toto":"tata"}'),
+          action => expect(action).to.have.deep.property('body', { toto: 'tata' }),
           null, null,
         ];
 

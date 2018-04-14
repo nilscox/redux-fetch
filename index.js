@@ -126,10 +126,42 @@ class FetchAction {
   }
 }
 
+const requestAction = (prefix, suffix, url, opts, body) => {
+  const action = {
+    type: `${prefix}${suffix}`,
+    url,
+    ...opts,
+  };
+
+  if (body)
+    action.body = body;
+
+  return action;
+};
+
+const resultAction = (prefix, suffix, status, duration, body) => {
+  const action = {
+    type: `${prefix}${suffix}`,
+    status,
+    duration,
+  };
+
+  if (body)
+    action.body = body;
+
+  return action;
+};
+
+const finishAction = (prefix, suffix, duration) => ({
+  type: `${prefix}${suffix}`,
+  duration,
+});
+
 const fetchMiddleware = config => store => next => action => {
   if (!(action instanceof FetchAction))
     return next(action);
 
+  const { dispatch, getState } = store;
   const { baseUrl, fetch, suffixes } = config;
 
   const prefix = action._prefix;
@@ -144,8 +176,6 @@ const fetchMiddleware = config => store => next => action => {
 
   const url = baseUrl + route;
 
-  const { dispatch, getState } = store;
-
   let res = null;
   let body = null;
   let duration = null;
@@ -158,58 +188,67 @@ const fetchMiddleware = config => store => next => action => {
       .then(() => duration = new Date() - startDate);
   };
 
-  const parseBody = () => Promise.resolve()
-    .then(() => {
-      const contentType = res.headers.get('Content-Type');
+  const parseBody = () => {
+    return Promise.resolve()
+      .then(() => {
+        const contentType = res.headers.get('Content-Type');
 
-      if (/^application\/json/.exec(contentType))
-        return res.json();
-      else if (/^text\//.exec(contentType))
-        return res.text();
+        if (/^application\/json/.exec(contentType))
+          return res.json();
+        else if (/^text\//.exec(contentType))
+          return res.text();
 
-      return null;
-    })
-    .then(b => body = b);
+        return null;
+      })
+      .then(b => body = b);
+  };
+
+  const shouldDispatchRequest = body => {
+    if (!onRequest)
+      return true;
+
+    return onRequest(dispatch, getState, url, fetchOpts, body);
+  };
 
   const dispatchRequest = () => {
-    const contentType = fetchOpts.headers && fetchOpts.headers['Content-Type'];
-    let { body } = fetchOpts;
+    const contentType = fetchOpts.headers && fetchOpts.headers['content-type'];
+    let body = fetchOpts.body;
 
-    if (contentType && contentType.match(/^application\/json/)) {
-      try {
-        body = JSON.parse(body);
-      } catch (err) {}
-    }
+    if (contentType && contentType.match(/^application\/json/))
+      body = JSON.parse(body);
 
-    if (!onRequest || onRequest(dispatch, getState, url, fetchOpts, body)) {
-      const action = { type: prefix + suffixes.request, url, ...fetchOpts };
+    if (shouldDispatchRequest(body))
+      dispatch(requestAction(prefix, suffixes.request, url, fetchOpts, body));
+  };
 
-      if (body)
-        action.body = body;
+  const shouldDispatchResult = ok => {
+    const f = ok ? onSuccess : onFailure;
 
-      dispatch(action);
-    }
+    if (!f)
+      return true;
+
+    return f(dispatch, getState, res.status, body, duration);
   };
 
   const dispatchResult = () => {
     const status = res.status;
     const ok = (!expect && res.ok) || (expect && expect.includes(status));
-    const f = ok ? onSuccess : onFailure;
     const suffix = ok ? suffixes.success : suffixes.failure;
 
-    if (!f || f(dispatch, getState, status, body, duration)) {
-      const action = { type: prefix + suffix, status, duration };
+    if (shouldDispatchResult(ok))
+      dispatch(resultAction(prefix, suffix, status, duration, body));
+  };
 
-      if (body)
-        action.body = body;
+  const shouldDispatchFinish = () => {
+    if (!onFinish)
+      return true;
 
-      dispatch(action);
-    }
+    return onFinish(dispatch, getState, duration);
   };
 
   const dispatchFinish = () => {
-    if (!onFinish || onFinish(dispatch, getState, duration))
-      dispatch({ type: prefix + suffixes.finish, duration });
+    if (shouldDispatchFinish())
+      dispatch(finishAction(prefix, suffixes.finish, duration));
   };
 
   return Promise.resolve()
