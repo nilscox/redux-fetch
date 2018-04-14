@@ -38,6 +38,8 @@ class FetchAction {
 
     this._expect = null;
 
+    this._bodyParser = null;
+
     this._onRequest = null;
     this._onSuccess = null;
     this._onFailure = null;
@@ -111,6 +113,11 @@ class FetchAction {
     return this;
   }
 
+  responseBodyParser(f) {
+    this._bodyParser = f;
+    return this;
+  }
+
   onRequest(f) {
     this._onRequest = f;
     return this;
@@ -163,6 +170,20 @@ const finishAction = (prefix, suffix, duration) => ({
   duration,
 });
 
+const defaultBodyParser = res => {
+  const contentType = res.headers.get('Content-Type');
+
+  if (!contentType)
+    return Promise.resolve();
+
+  if (contentType.match(/^application\/json$/))
+    return res.json();
+  else if (contentType.match(/^text/))
+    return res.text();
+
+  return Promise.resolve();
+};
+
 const fetchMiddleware = config => store => next => action => {
   if (!(action instanceof FetchAction))
     return next(action);
@@ -178,6 +199,8 @@ const fetchMiddleware = config => store => next => action => {
 
   const url = (actionBaseUrl || baseUrl) + route;
 
+  const bodyParser = action._bodyParser || defaultBodyParser;
+
   const onRequest = action._onRequest || config.onRequest;
   const onSuccess = action._onSuccess || config.onSuccess;
   const onFailure = action._onFailure || config.onFailure;
@@ -187,7 +210,7 @@ const fetchMiddleware = config => store => next => action => {
   let body = null;
   let duration = null;
 
-  const doFetch = () => {
+  const fetchWithDuration = () => {
     const startDate = new Date();
 
     return fetch(url, fetchOpts)
@@ -197,16 +220,7 @@ const fetchMiddleware = config => store => next => action => {
 
   const parseBody = () => {
     return Promise.resolve()
-      .then(() => {
-        const contentType = res.headers.get('Content-Type');
-
-        if (/^application\/json/.exec(contentType))
-          return res.json();
-        else if (/^text\//.exec(contentType))
-          return res.text();
-
-        return null;
-      })
+      .then(() => bodyParser(res))
       .then(b => body = b);
   };
 
@@ -260,7 +274,7 @@ const fetchMiddleware = config => store => next => action => {
 
   return Promise.resolve()
     .then(dispatchRequest)
-    .then(doFetch)
+    .then(fetchWithDuration)
     .then(parseBody)
     .then(dispatchResult)
     .then(dispatchFinish)

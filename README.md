@@ -170,6 +170,7 @@ Here is a list of all the methods that can be called to configure a `FetchAction
 - [header(key, value)](#headerkey-value)
 - [opts(obj)](#optsobj)
 - [expect(values)](#expectvalues)
+- [responseBodyParser(callback)](#responsebodyparsercallback)
 - [onRequest(callback)](#onrequestcallback)
 - [onSuccess(callback)](#onsuccesscallback)
 - [onFailure(callback)](#onfailurecallback)
@@ -201,7 +202,7 @@ Set a HTTP header field that will be sent with the request.
 
 If value is null, the header will be unset.
 
-> This can be used to override the `Content-Type` set by a call to [body] #bodyobj).
+> This can be used to override the `Content-Type` set by a call to [body](#bodyobj).
 
 #### opts(obj)
 
@@ -215,6 +216,23 @@ When the request has finished, a _success_ action will be triggered if the actua
 a _failure_ action will be triggered instead if the status code does not appear in the expected values.
 
 If no expeceted values are set, the type of event that is dispatched is based on [`response.ok`](https://developer.mozilla.org/en-US/docs/Web/API/Response/ok).
+
+#### responseBodyParser(callback)
+
+Provide a callback to be invoked when the response payload needs to be parsed. Its signature is:
+
+```
+(response) -> Promise<any>
+```
+
+- response: The [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
+
+The callback should return a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+that resolves the parsed body.
+
+If not provided, a default body parser will resolve [`response.json()`](https://developer.mozilla.org/en-US/docs/Web/API/Body/json)
+if the `Content-Type` response header is `application/json`, [`response.text()`](https://developer.mozilla.org/en-US/docs/Web/API/Body/text)
+if the `Content-Type` response heades matches `/^text/`, or `null` otherwise.
 
 #### onRequest(callback)
 

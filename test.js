@@ -497,6 +497,23 @@ describe('redux-fetch', () => {
 
   });
 
+  describe('responseBodyParser', () => {
+
+    it('should call the action body parser', async () => {
+      const bodyParser = () => Promise.resolve(42);
+      const action = new FetchAction(PREFIX).responseBodyParser(bodyParser);
+
+      const expected = [
+        null,
+        action => expect(action).to.have.property('body', 42),
+        null,
+      ];
+
+      await test(action, expected);
+    });
+
+  });
+
   describe('opts', () => {
     const action = new FetchAction(PREFIX).opts({ custom: 42, foo: 'bar' });
 
