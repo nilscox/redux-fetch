@@ -15,7 +15,7 @@
     "middleware",
     "api"
   ],
-  "author": "Nils Cox <nils@epita.fr>",
+  "author": "Nils Cox <nils@nils.cx>",
   "bugs": {
     "url": "https://github.com/nilscox/redux-fetch/issues"
   },
