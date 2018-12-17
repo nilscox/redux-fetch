@@ -176,7 +176,7 @@ const defaultBodyParser = res => {
   if (!contentType)
     return Promise.resolve();
 
-  if (contentType.match(/^application\/json$/))
+  if (contentType.match(/^application\/json/))
     return res.json();
   else if (contentType.match(/^text/))
     return res.text();
