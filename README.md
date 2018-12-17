@@ -311,6 +311,7 @@ All configuration values are optional.
 {
   fetch: Function,
   baseUrl: string,
+  globalOpts: object,
   suffixes: {
     request: string,
     success: string,
@@ -326,6 +327,7 @@ All configuration values are optional.
 
 - fetch: Custom [fetch](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch) implementation
 - baseUrl: The base URL that will be prefixed to any request route
+- globalOpts: An options object that will be included in every call to fetch
 - suffixes: An objet defining the suffixes to be used in the action types
 - onRequest: A callback function that will be invoked before any request (see [FetchAction.onRequest](#onrequestcallback))
 - onSuccess: A callback function that will be invoked after a request succeeded (see [FetchAction.onSuccess](#onsuccesscallback))

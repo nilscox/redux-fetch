@@ -65,40 +65,29 @@ class FetchAction {
       delete this._opts.body;
 
       this.header('Content-Type', null);
-      this.header('Content-Length', null);
 
       return this;
     }
 
-    if (typeof body === 'object') {
-      this.header('Content-Type', 'application/json');
-      this._opts.body = JSON.stringify(body);
-    } else if (typeof body === 'string') {
+    if (typeof body === 'string') {
       this.header('Content-Type', 'text/plain');
       this._opts.body = body;
     } else {
-      throw new Error('invalid body type: ', typeof body);
+      this.header('Content-Type', 'application/json');
+      this._opts.body = JSON.stringify(body);
     }
-
-    this.header('Content-Length', this._opts.body.length);
 
     return this;
   }
 
-  header(key_, value) {
-    const key = key_.toLowerCase();
-
+  header(key, value) {
     if (!this._opts.headers)
-      this._opts.headers = {};
+      this._opts.headers = new Headers();
 
-    if (!value) {
-      delete this._opts.headers[key];
-
-      if (Object.keys(this._opts.headers).length === 0)
-        delete this._opts.headers;
-    } else {
-      this._opts.headers[key] = value;
-    }
+    if (value === null && this._opts.headers.has(key))
+      this._opts.headers.delete(key);
+    else
+      this._opts.headers.set(key, value);
 
     return this;
   }
@@ -189,7 +178,7 @@ const fetchMiddleware = config => store => next => action => {
     return next(action);
 
   const { dispatch, getState } = store;
-  const { baseUrl, fetch, suffixes } = config;
+  const { baseUrl, fetch, globalOpts, suffixes } = config;
 
   const prefix = action._prefix;
   const route = action._route;
@@ -213,7 +202,7 @@ const fetchMiddleware = config => store => next => action => {
   const fetchWithDuration = () => {
     const startDate = new Date();
 
-    return fetch(url, fetchOpts)
+    return fetch(url, { ...globalOpts, ...fetchOpts })
       .then(r => res = r)
       .then(() => duration = new Date() - startDate);
   };
@@ -284,6 +273,7 @@ const fetchMiddleware = config => store => next => action => {
 const defaultConfig = {
   fetch: isomorphicFetch,
   baseUrl: '',
+  globalOpts: {},
   suffixes: {
     request: '_REQUEST',
     success: '_SUCCESS',
