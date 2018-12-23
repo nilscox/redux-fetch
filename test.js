@@ -154,15 +154,15 @@ describe('redux-fetch', () => {
         null, null,
       ],
       singleHeader: [
-        action => expect(action).to.have.deep.property('headers', { foo: 'bar' }),
+        action => expect(action).to.have.property('headers').that.satisfy(h => h.get('foo') === 'bar'),
         null, null,
       ],
       multipleHeaders: [
-        action => expect(action).to.have.deep.property('headers', { foo: 'bar', baz: 42 }),
+        action => expect(action).to.have.property('headers').that.satisfy(h => h.get('foo') === 'bar' && h.get('baz') === 42),
         null, null,
       ],
       overrideHeader: [
-        action => expect(action).to.have.deep.property('headers', { foo: 42 }),
+        action => expect(action).to.have.property('headers').that.satisfy(h => h.get('foo') === 42),
         null, null,
       ],
     };
@@ -172,13 +172,13 @@ describe('redux-fetch', () => {
         fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('headers')),
       }),
       singleHeader: makeConfig({
-        fetch: wrapFetch((url, opts) => expect(opts).to.have.deep.property('headers', { foo: 'bar' })),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.property('headers').that.satisfy(h => h.get('foo') === 'bar')),
       }),
       multipleHeaders: makeConfig({
-        fetch: wrapFetch((url, opts) => expect(opts).to.have.deep.property('headers', { foo: 'bar', baz: 42 })),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.property('headers').that.satisfy(h => h.get('foo') === 'bar' && h.get('baz') === 42)),
       }),
       overrideHeader: makeConfig({
-        fetch: wrapFetch((url, opts) => expect(opts).to.have.deep.property('headers', { foo: 42 })),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.property('headers').that.satisfy(h => h.get('foo') === 42)),
       }),
     };
 
@@ -202,12 +202,12 @@ describe('redux-fetch', () => {
       const action = new FetchAction(PREFIX).header('Foo', 'bar').header('Foo', null);
 
       const expected = [
-        action => expect(action).to.not.have.property('headers'),
+        action => expect(action).to.have.property('headers').that.satisfy(h => h.get('foo') === null),
         null, null,
       ];
 
       const config = makeConfig({
-        fetch: wrapFetch((url, opts) => expect(opts).to.not.have.property('headers')),
+        fetch: wrapFetch((url, opts) => expect(opts).to.have.property('headers').that.satisfy(h => h.get('foo') === null)),
       });
 
       await test(action, expected, config);
