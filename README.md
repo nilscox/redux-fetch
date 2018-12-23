@@ -153,6 +153,7 @@ that resolves an objet of type:
 ```
 {
   response: Response,
+  status: number,
   duration: number,
   body: any,
 }

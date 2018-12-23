@@ -267,7 +267,7 @@ const fetchMiddleware = config => store => next => action => {
     .then(parseBody)
     .then(dispatchResult)
     .then(dispatchFinish)
-    .then(() => ({ response: res, duration, body }));
+    .then(() => ({ response: res, status: res.status, duration, body }));
 };
 
 const defaultConfig = {
